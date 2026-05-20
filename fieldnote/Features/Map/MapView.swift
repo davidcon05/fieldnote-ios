@@ -149,7 +149,7 @@ struct MapView: View {
                 }
             }
         }
-        .padding(16)
+        .padding(12)
         .background(
             Color.white.opacity(0.7)
                 .background(.ultraThinMaterial)

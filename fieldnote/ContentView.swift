@@ -9,53 +9,54 @@ import SwiftUI
 import SwiftData
 
 struct ContentView: View {
-    @Environment(\.modelContext) private var modelContext
-    @Query private var items: [Item]
+      @Environment(\.modelContext) private var modelContext
+      @Query private var journals: [Journal]
 
-    var body: some View {
-        NavigationSplitView {
-            List {
-                ForEach(items) { item in
-                    NavigationLink {
-                        Text("Item at \(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))")
-                    } label: {
-                        Text(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))
-                    }
-                }
-                .onDelete(perform: deleteItems)
-            }
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    EditButton()
-                }
-                ToolbarItem {
-                    Button(action: addItem) {
-                        Label("Add Item", systemImage: "plus")
-                    }
-                }
-            }
-        } detail: {
-            Text("Select an item")
-        }
-    }
+      var body: some View {
+          NavigationStack {
+              List {
+                  ForEach(journals) { journal in
+                      VStack(alignment: .leading) {
+                          Text(journal.name)
+                              .font(.headline)
+                          Text("\(journal.logs.count) logs")
+                              .font(.caption)
+                              .foregroundColor(.secondary)
+                      }
+                  }
+                  .onDelete(perform: deleteJournals)
+              }
+              .navigationTitle("Journals")
+              .toolbar {
+                  ToolbarItem(placement: .navigationBarTrailing) {
+                      EditButton()
+                  }
+                  ToolbarItem {
+                      Button(action: addJournal) {
+                          Label("Add Journal", systemImage: "plus")
+                      }
+                  }
+              }
+          }
+      }
 
-    private func addItem() {
-        withAnimation {
-            let newItem = Item(timestamp: Date())
-            modelContext.insert(newItem)
-        }
-    }
+      private func addJournal() {
+          withAnimation {
+              let newJournal = Journal(name: "Test Journal \(journals.count + 1)")
+              modelContext.insert(newJournal)
+          }
+      }
 
-    private func deleteItems(offsets: IndexSet) {
-        withAnimation {
-            for index in offsets {
-                modelContext.delete(items[index])
-            }
-        }
-    }
-}
+      private func deleteJournals(offsets: IndexSet) {
+          withAnimation {
+              for index in offsets {
+                  modelContext.delete(journals[index])
+              }
+          }
+      }
+  }
 
-#Preview {
-    ContentView()
-        .modelContainer(for: Item.self, inMemory: true)
-}
+  #Preview {
+      ContentView()
+          .modelContainer(for: Journal.self, inMemory: true)
+  }

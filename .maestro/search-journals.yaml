@@ -1,0 +1,21 @@
+# Test search functionality
+appId: com.davidcontreras.fieldnote
+tags:
+  - smoke
+  - search
+---
+- launchApp
+- assertVisible: "Journals"
+
+# Test search (assuming seed data exists)
+- tapOn: "Search Journals..."
+- inputText: "River"
+
+# Should show journals with "River" in name
+- assertVisible: "Cedar River Watershed"
+- assertVisible: "Snoqualmie River Basin"
+- assertVisible: "Columbia River Gorge"
+
+# Should NOT show journals without "River"
+- assertNotVisible: "Rice Creek Wetlands"
+- assertNotVisible: "Mount Ritter Expedition"

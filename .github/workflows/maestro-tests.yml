@@ -1,0 +1,70 @@
+name: Maestro UI Tests
+
+# Manual trigger only for now (experimental)
+on:
+  workflow_dispatch:
+
+# Uncomment to enable automatic runs:
+#   push:
+#     branches: [ main, develop ]
+#   pull_request:
+#     branches: [ main ]
+
+jobs:
+  test-ios:
+    name: Run Maestro Tests on iOS
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Build app for testing
+        run: |
+          xcodebuild \
+            -project fieldnote.xcodeproj \
+            -scheme fieldnote \
+            -sdk iphonesimulator \
+            -configuration Debug \
+            -derivedDataPath build \
+            build
+
+      - name: Run Maestro Tests (Local)
+        if: false  # Disabled until Maestro Cloud is configured
+        run: |
+          # Install Maestro CLI
+          curl -Ls "https://get.maestro.mobile.dev" | bash
+          export PATH="$HOME/.maestro/bin:$PATH"
+
+          # Boot simulator
+          xcrun simctl boot "iPhone 15 Pro" || true
+
+          # Run tests locally
+          maestro test --app build/Build/Products/Debug-iphonesimulator/fieldnote.app .maestro/
+
+      - name: Run Maestro Tests (Cloud)
+        if: false  # Enable when ready to use Maestro Cloud
+        uses: mobile-dev-inc/[email protected]
+        with:
+          api-key: ${{ secrets.MAESTRO_API_KEY }}
+          project-id: ${{ secrets.MAESTRO_PROJECT_ID }}
+          app-file: build/Build/Products/Debug-iphonesimulator/fieldnote.app
+          # Optional: Run only smoke tests
+          # tags: smoke
+          # Optional: Specify device
+          # device-model: iPhone 15 Pro
+          # device-os: iOS 17
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: maestro-test-results
+          path: |
+            .maestro/screenshots/
+            maestro-*.log

@@ -1,0 +1,17 @@
+# Basic smoke test: Create a new journal
+appId: com.davidcontreras.fieldnote
+tags:
+  - smoke
+  - critical
+---
+- launchApp
+- assertVisible: "Journals"
+
+# Create new journal
+- tapOn: "New Journal"
+- assertVisible: "Journal Name"
+- inputText: "Maestro Test Journal"
+- tapOn: "Create"
+
+# Verify journal created
+- assertVisible: "Maestro Test Journal"

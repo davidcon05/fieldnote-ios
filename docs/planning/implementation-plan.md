@@ -39,15 +39,39 @@ Bottom Navigation Appears:
 
 ### 2. Dashboard Screen
 - **Purpose:** Select which journal to work in
-- **UI:** List of journals (cards with name, entry count, last modified)
-- **Actions:** Create journal, select journal, delete journal
-- **Navigation:** Select journal → Shows bottom nav
+- **UI:** Grid of journal cards (clean, modern card style)
+  - Card shows: theme gradient/photo, journal name, last modified date, log count, settings icon
+  - **Lock badge:** Shows lock icon in top-right corner if password protected (privacy indicator)
+  - **Settings icon:** Ellipsis.circle in top-right of card content → Opens JournalSettingsSheet
+  - **Navigation chevron:** Bottom-right indicates card is tappable
+- **Actions:**
+  - Create journal (FAB button) → Opens CreateJournalSheet
+  - **Tap journal card** → Navigate to JournalTabView
+  - **Tap settings icon** → Opens JournalSettingsSheet
+    - Change journal name
+    - Change theme (icon + color)
+    - Change cover photo
+    - Toggle password protection
+    - **Delete journal** (with confirmation alert)
+- **Navigation:** Tap card → Shows JournalTabView with bottom nav tabs
+
+**Journal Settings Sheet:**
+- Accessible from settings icon on dashboard card
+- **Delete Confirmation:** "Delete [Journal Name]? This will permanently delete all logs in this journal."
+  - Primary action: "Delete" (destructive red)
+  - Secondary action: "Cancel"
+
+**Design Notes:**
+- **Lock badge:** Only visible on password-protected journals
+- **Settings on card:** Direct access to journal settings from dashboard
+- Delete requires opening settings sheet + confirmation (prevents accidental deletion)
 
 ### 3. Journal Tab (Entry List)
 - **Purpose:** View all entries for selected journal
 - **UI:** Chronological list of entry cards
   - Entry card shows: photo thumbnail, date/time, GPS preview, weather icon, first line of notes
 - **Actions:** Tap entry → Entry detail, Pull to refresh
+- **Note:** Journal settings are accessible from the Dashboard card (settings icon)
 
 ### 4. Entry Tab (Create/Edit)
 - **Purpose:** Capture field observations
@@ -83,46 +107,114 @@ class Journal {
     var createdDate: Date
     var lastModified: Date
     var coverPhotoURL: URL?
-    var entries: [Entry]
+
+    // Theme (always assigned - serves as fallback and privacy layer)
+    var themeIcon: String
+    var themeColorHex: String
+
+    // Privacy
+    var isPasswordProtected: Bool
+
+    var logs: [Log]
 }
 ```
 
-### Entry
+**Journal Card Background Priority:**
+1. **Password protected** → Always show theme (privacy - hides content)
+2. **Custom cover photo** → Show coverPhotoURL if set
+3. **Recent log media** → Show first log's photo if available
+4. **Empty journal** → Show theme (fallback)
+
+**Theme System:**
+- Every journal is assigned a random theme on creation (icon + color)
+- Theme serves dual purpose: aesthetic fallback AND privacy layer
+- 6 available themes: leaf (green), drop (brown), mountain (gold), tree (dark green), flame (red), snowflake (teal)
+- User can change theme in Journal Settings
+
+### Log
 ```swift
 @Model
-class Entry {
+class Log {
     var id: UUID
-    var journalID: UUID
-    var timestamp: Date
+    var title: String = "Untitled Entry"  // REQUIRED field
+    var timestamp: Date         // Device time (always available)
 
-    // Auto-populated
+    // Auto-populated (optional - graceful degradation)
     var latitude: Double?
     var longitude: Double?
     var altitude: Double?
-    var weather: Weather?  // Auto-fetched from API
+    var locationError: String?  // Error message if GPS failed
+
+    var weather: Weather?       // Auto-fetched from API
+    var weatherError: String?   // Error message if weather fetch failed
 
     // User input
-    var notes: String
-    var photoURLs: [URL]
-    var audioMemoURL: URL?
+    var notes: String           // Optional field notes
+    var mediaURLs: [URL]        // Photos AND videos
+
+    // Audio memos (multiple per log)
+    @Relationship(deleteRule: .cascade, inverse: \AudioMemo.log)
+    var audioMemos: [AudioMemo] = []
+
+    var journal: Journal?
+
+    var isValid: Bool {
+        !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    var hasLocationData: Bool {
+        latitude != nil && longitude != nil
+    }
+
+    var hasWeatherData: Bool {
+        weather != nil
+    }
+}
+```
+
+### AudioMemo
+```swift
+@Model
+class AudioMemo {
+    var id: UUID
+    var title: String           // e.g., "Soil Moisture", "Ambient Acoustics"
+    var audioURL: URL
+    var transcription: String?  // Speech-to-text transcription
+    var timestamp: Date
+    var duration: TimeInterval
+    var log: Log?               // Relationship to parent log
 }
 ```
 
 ### Weather (Auto-populated)
 ```swift
 struct Weather: Codable {
-    var condition: String       // "Sunny", "Rainy", "Cloudy"
-    var temperature: Double     // Celsius
-    var humidity: Int           // Percentage
-    var windSpeed: Double       // m/s
-    var icon: String            // Weather icon code
+    let condition: String       // "Sunny", "Rainy", "Cloudy"
+    let temperature: Double     // Celsius
+    let humidity: Int           // Percentage
+    let windSpeed: Double       // m/s
+    let icon: String            // Weather icon code
 }
 ```
 
+### Validation Rules
+- **REQUIRED:** Title (non-empty, non-whitespace) - Only field required to save a log
+- **OPTIONAL:** Notes, photos/videos (supports multiple via `mediaURLs`)
+- **OPTIONAL:** Audio memos (supports multiple AudioMemo objects)
+- **OPTIONAL:** GPS coordinates, altitude (graceful degradation if unavailable)
+- **OPTIONAL:** Weather data (depends on GPS availability)
+- **AUTO-GENERATED:** ID (UUID), timestamp (device time)
+
+### Error Tracking
+- **Location errors:** Stored in `locationError` (e.g., "Location services disabled")
+- **Weather errors:** Stored in `weatherError` (e.g., "Network unavailable")
+- **UI behavior:** Show error banner with "Retry" button, but allow saving without data
+- **Benefit:** Preserves debugging info, user knows what went wrong, can retry or proceed
+
 **Weather API:** Use free tier of [OpenWeatherMap API](https://openweathermap.org/api) or [WeatherAPI.com](https://www.weatherapi.com/)
-- Auto-fetch when entry is created (using GPS coordinates)
+- Auto-fetch when log is created (using GPS coordinates)
 - Cache for offline use
-- Display weather icon + temp on entry card
+- Display weather icon + temp on log card
 
 ---
 
@@ -168,16 +260,143 @@ struct Weather: Codable {
 ## v1.0: The Logbook (MVP)
 
 **Timeline:** 4-6 weeks
-**Focus:** Core data capture + offline storage
+**Focus:** Core data capture + offline storage + basic editing
 
-### Features
-- Dashboard (journal selection)
-- Journal tab (entry list)
-- Entry tab (GPS + photo + notes + **weather**)
-- Bottom nav (4 tabs)
-- SwiftData (offline storage)
-- CoreLocation (GPS + altitude)
-- **Weather API** (auto-fetch on entry creation)
+### Core Features (Must-Have for Launch)
+
+#### ✅ Completed Features
+1. **Dashboard (Journal Management)**
+   - Grid of journal cards with modern design
+   - Create new journals (FAB button)
+   - Delete journals with confirmation
+   - Password protection with biometric auth (Face ID/Touch ID)
+   - Brute force protection (5 attempts, 5-minute lockout)
+   - Journal settings (name, theme, cover photo)
+   - SwiftData persistence
+   - MVVM architecture with 43 unit tests
+
+2. **Data Models & Persistence**
+   - Journal model with themes and password protection
+   - Log model with GPS, weather, air quality, media
+   - Weather model with AQI, PM2.5, PM10
+   - SwiftData offline storage (persistent, not in-memory)
+   - Seed data with 6 Olympic National Park sample logs
+
+3. **New Log Entry (Capture Portal)**
+   - Bento-style asymmetric layout
+   - GPS tracking with CoreLocation
+   - Weather API integration (OpenWeatherMap)
+   - Air Quality API integration (AQI, PM2.5, PM10)
+   - Capture Photo button (placeholder for camera)
+   - Record Memo card (placeholder for audio)
+   - GPS Telemetry card with loading states
+   - Weather Data card with environment metrics
+   - Field Notes text editor
+   - 10-second timeout for all API calls
+   - Proper task lifecycle management (no infinite loops)
+   - Temperature in Fahrenheit
+
+4. **Logs List View**
+   - Two card variants:
+     - **Featured cards** (first 3): Sample images, weather badge, expandable details
+     - **Compact cards** (remaining): Weather icon, title, date
+   - Sorted by recency (newest first)
+   - Tappable cards for editing
+   - Sample images: forest_moss, alpine_meadow, tide_pools
+
+5. **Bottom Navigation**
+   - Tab bar with Logs, New Log, Map (placeholder), Settings tabs
+   - Navigation between journal contexts
+
+#### 🔲 Required for v1.0 Launch (ALL MUST-HAVE)
+
+**Priority Order for Implementation:**
+
+**6. Log Editing** ✅ COMPLETED (2026-05-19)
+   - **Status:** EditLogView.swift fully implemented
+   - **Completed Features:**
+     - ✅ Edit log title (required field with validation)
+     - ✅ Edit log notes (optional field)
+     - ✅ Update timestamp (DatePicker with date + time)
+     - ✅ GPS refresh (confirmation alert, updates to current location)
+     - ✅ Weather refresh (confirmation alert, uses log's stored coordinates)
+     - ✅ View stored weather data (read-only historical snapshot with "CAPTURED AT" label)
+     - ✅ Delete log with confirmation (requires typing "DELETE")
+     - ✅ Save changes button (disabled until valid)
+     - ✅ Form validation (title required)
+     - ✅ Edit audio memos (MultiAudioMemoView integrated)
+   - **Blocked on:**
+     - 🔲 Add/remove photos (PhotoGalleryView placeholder - camera integration needed)
+   - **Technical:**
+     - ✅ NavigationLink push from LogsListView working
+     - ✅ Weather NOT re-fetched (uses stored data)
+     - ✅ GPS refreshable with confirmation
+     - ✅ Computed binding for audio memos editing
+     - ✅ "Save Changes" button implemented
+     - ✅ Red "Delete Log" button at bottom
+
+**7. Camera Integration** ✅ COMPLETED (2026-05-13)
+   - **Status:** Fully implemented in NewLogView and EditLogView
+   - **Components:**
+     - ✅ CameraPickerRepresentable (UIImagePickerController wrapper)
+     - ✅ PhotoPickerRepresentable (PHPickerViewController wrapper, up to 10 images)
+     - ✅ PhotoStorageService (save/load/delete photos from disk)
+     - ✅ PhotoGalleryView (complete UI with TabView slider)
+   - **Features Implemented:**
+     - ✅ Camera capture mode (device camera)
+     - ✅ Photo library import mode (select up to 10 photos)
+     - ✅ Multi-photo gallery with TabView slider + page indicators
+     - ✅ Swipe between photos horizontally
+     - ✅ Add/delete individual photos with confirmation
+     - ✅ First photo shown in list card thumbnails
+     - ✅ Empty state with "Add Photos" button
+     - ✅ Photo count display
+     - ✅ "Add More" button when photos exist
+   - **Technical:**
+     - Uses UIImagePickerController for camera
+     - Uses PHPickerViewController for photo library
+     - JPEG compression at 0.8 quality
+     - Photos stored in Documents/LogPhotos directory
+     - Cascade deletion when log is deleted
+   - **Permissions:** NSCameraUsageDescription, NSPhotoLibraryUsageDescription
+   - **Simulator Testable:** Photo library import works in simulator
+
+**8. Audio Memo Recording + Transcription** ✅ COMPLETED (2026-05-19)
+   - **Status:** Fully implemented in NewLogView and EditLogView
+   - **Components:**
+     - ✅ AudioMemo model with SwiftData relationships
+     - ✅ MultiAudioMemoView component for managing multiple memos
+     - ✅ AudioRecorderService with AVAudioRecorder integration
+     - ✅ AudioTranscriptionService with Apple Speech framework
+   - **Features Implemented:**
+     - ✅ Record multiple audio memos per log entry
+     - ✅ Animated recording UI with live timer
+     - ✅ Title prompting after recording stops
+     - ✅ Automatic speech-to-text transcription
+     - ✅ Individual playback controls for each memo
+     - ✅ Delete memos with confirmation
+     - ✅ Transcriptions displayed in memo cards
+     - ✅ Searchable transcriptions in LogsListView
+     - ✅ Display in LogDetailView
+   - **Technical:**
+     - Uses Apple Speech framework (SFSpeechRecognizer)
+     - Offline capable after initial language pack download
+     - Cascade deletion when log is deleted
+     - Proper SwiftData relationship management
+   - **Permissions:** NSMicrophoneUsageDescription, NSSpeechRecognitionUsageDescription
+   - **Device Required:** Audio recording requires physical device (simulator limited)
+
+**9. Map View (Basic)** ✅ COMPLETED (2026-05-13)
+   - ✅ Apple Maps integration with MapKit (hybrid style)
+   - ✅ Display all logs as pins (using latitude/longitude)
+   - ✅ Custom pin colors (blue/green/purple/red, orange when selected)
+   - ✅ Pin tap shows custom callout (image, notes, date, Details button)
+   - ✅ Navigate to EditLogView from Details button
+   - ✅ Live metrics panel (collapsible, shows avg elevation/humidity/temp)
+   - ✅ Center map button (orange, bottom-right)
+   - ✅ Filter to show only logs with GPS data
+   - ✅ Empty state for journals without GPS logs
+   - **See:** `docs/planning/mapview-implementation-plan.md` for full details
 
 ---
 
@@ -218,13 +437,13 @@ class Journal {
 }
 ```
 
-#### 3. Set up Entry Model
-**File:** `Models/Entry.swift`
+#### 3. Set up Log Model
+**File:** `Models/Log.swift`
 ```swift
 import SwiftData
 
 @Model
-class Entry {
+class Log {
     var id: UUID
     var timestamp: Date
     var latitude: Double?
@@ -233,13 +452,13 @@ class Entry {
     var weatherCondition: String?
     var temperature: Double?
     var notes: String
-    var photoURLs: [URL]
+    var mediaURLs: [URL]
 
     init() {
         self.id = UUID()
         self.timestamp = Date()
         self.notes = ""
-        self.photoURLs = []
+        self.mediaURLs = []
     }
 }
 ```
@@ -256,16 +475,75 @@ struct FieldNoteApp: App {
         WindowGroup {
             ContentView()
         }
-        .modelContainer(for: [Journal.self, Entry.self])
+        .modelContainer(for: [Journal.self, Log.self])
     }
 }
 ```
 
 #### 5. Build Dashboard Screen
 **File:** `Views/DashboardView.swift`
-- Create journal list UI
-- Add "Create Journal" button
-- Navigation to bottom tabs on journal selection
+- ✅ Create journal list UI (Scooters card style)
+- ✅ Add "Create Journal" FAB button
+- ✅ DashboardViewModel with MVVM pattern
+- ✅ Add navigation to JournalTabView on card tap
+- ✅ Add delete journal with confirmation
+- ✅ **Password Protection Feature** (v1.5 enhancement)
+  - ✅ KeychainManager with SHA256 password hashing + salt
+  - ✅ Biometric authentication (Face ID/Touch ID) with password fallback
+  - ✅ Brute force protection (5 attempts, 5-minute lockout)
+  - ✅ Password-protected journal settings flow
+  - ✅ Protocol-based dependency injection (testable architecture)
+  - ✅ Comprehensive test coverage (43 unit tests across DashboardViewModel + KeychainManager)
+
+**Implementation Notes:**
+
+**Navigation to JournalTabView:**
+```swift
+// In DashboardView
+NavigationStack {
+    ScrollView {
+        ForEach(viewModel.journals) { journal in
+            JournalCardScootersStyle(journal: journal)
+                .onTapGesture {
+                    // Navigate to JournalTabView(journal: journal)
+                }
+        }
+    }
+}
+```
+
+**Delete with Context Menu:**
+```swift
+// In JournalCardScootersStyle
+.contextMenu {
+    Button(role: .destructive) {
+        showDeleteConfirmation = true
+    } label: {
+        Label("Delete Journal", systemImage: "trash")
+    }
+}
+.alert("Delete \(journal.name)?", isPresented: $showDeleteConfirmation) {
+    Button("Cancel", role: .cancel) { }
+    Button("Delete", role: .destructive) {
+        viewModel.deleteJournal(journal)
+    }
+} message: {
+    Text("This will permanently delete all logs in this journal.")
+}
+```
+
+**DashboardViewModel delete function:**
+```swift
+func deleteJournal(_ journal: Journal) {
+    modelContext.delete(journal)
+    do {
+        try modelContext.save()
+        loadJournals()
+    } catch {
+        errorMessage = "Failed to delete journal: \(error.localizedDescription)"
+    }
+}
+```
 
 #### 6. Build Splash Screen (Optional)
 **File:** `Views/SplashView.swift`
@@ -302,6 +580,18 @@ class LocationManager: NSObject, ObservableObject {
 ```xml
 <key>NSLocationWhenInUseUsageDescription</key>
 <string>We need your location to tag field entries with GPS coordinates.</string>
+
+<key>NSCameraUsageDescription</key>
+<string>We need access to your camera to capture photos for field observations.</string>
+
+<key>NSMicrophoneUsageDescription</key>
+<string>We need access to your microphone to record audio memos for field notes.</string>
+
+<key>NSSpeechRecognitionUsageDescription</key>
+<string>We need access to speech recognition to automatically transcribe your audio memos into searchable text.</string>
+
+<key>NSPhotoLibraryUsageDescription</key>
+<string>We need access to your photo library to save and view field observation photos.</string>
 ```
 
 #### 9. Set up Weather API Service
@@ -349,32 +639,53 @@ struct CameraView: UIViewControllerRepresentable {
 }
 ```
 
-#### 12. Save Entry with Auto-populated Data
+#### 12. Save Log with Auto-populated Data
 ```swift
-func createEntry() {
-    let entry = Entry()
+func createLog() {
+    let log = Log()
 
     // Auto-populate GPS
-    if let location = locationManager.location {
-        entry.latitude = location.coordinate.latitude
-        entry.longitude = location.coordinate.longitude
-        entry.altitude = location.altitude
+    Task {
+        do {
+            let location = try await locationManager.getCurrentLocation()
+            log.latitude = location.coordinate.latitude
+            log.longitude = location.coordinate.longitude
+            log.altitude = location.altitude
+            log.locationError = nil
 
-        // Auto-fetch weather
-        Task {
-            let weather = try await weatherService.fetchWeather(
-                latitude: location.coordinate.latitude,
-                longitude: location.coordinate.longitude
-            )
-            entry.weatherCondition = weather.condition
-            entry.temperature = weather.temperature
+            // Auto-fetch weather
+            do {
+                let weather = try await weatherService.fetchWeather(
+                    latitude: location.coordinate.latitude,
+                    longitude: location.coordinate.longitude
+                )
+                log.weather = weather
+                log.weatherError = nil
+            } catch {
+                log.weatherError = error.localizedDescription
+                // Show banner: "⚠️ Weather unavailable - Retry?"
+            }
+        } catch {
+            log.locationError = error.localizedDescription
+            // Show banner: "⚠️ Location unavailable - Retry?"
         }
     }
 
-    entry.notes = notes
-    entry.photoURLs = photoURLs
+    log.notes = notes
+    log.mediaURLs = mediaURLs
 
-    modelContext.insert(entry)
+    // Validate before saving
+    guard log.isValid else {
+        showAlert("Please add notes before saving")
+        return
+    }
+
+    modelContext.insert(log)
+}
+
+// Retry function
+func retryLocation() {
+    // Attempt to get location again and update log
 }
 ```
 
@@ -600,14 +911,14 @@ struct MapView: View {
 WEATHER_API_KEY = your_key_here
 ```
 
-#### 3. Fetch Weather on Entry Creation
+#### 3. Fetch Weather on Log Creation
 ```swift
-func createEntry() async {
-    let entry = Entry()
+func createLog() async {
+    let log = Log()
 
     if let location = locationManager.location {
-        entry.latitude = location.coordinate.latitude
-        entry.longitude = location.coordinate.longitude
+        log.latitude = location.coordinate.latitude
+        log.longitude = location.coordinate.longitude
 
         // Auto-fetch weather
         do {
@@ -615,16 +926,19 @@ func createEntry() async {
                 latitude: location.coordinate.latitude,
                 longitude: location.coordinate.longitude
             )
-            entry.weatherCondition = weather.condition
-            entry.temperature = weather.temperature
-            entry.humidity = weather.humidity
+            log.weatherCondition = weather.condition
+            log.temperature = weather.temperature
+            log.humidity = weather.humidity
         } catch {
             print("Weather fetch failed: \(error)")
             // Continue without weather data
         }
     }
 
-    modelContext.insert(entry)
+    // Validate before saving
+    guard log.isValid else { return }
+
+    modelContext.insert(log)
 }
 ```
 
@@ -645,14 +959,14 @@ class WeatherCache {
 }
 ```
 
-#### 5. Display Weather on Entry Card
+#### 5. Display Weather on Log Card
 ```swift
 HStack {
-    Image(systemName: entry.weatherIcon)
+    Image(systemName: log.weatherIcon)
         .font(.title2)
-    Text("\(Int(entry.temperature ?? 0))°C")
+    Text("\(Int(log.temperature ?? 0))°C")
         .font(.headline)
-    Text(entry.weatherCondition ?? "N/A")
+    Text(log.weatherCondition ?? "N/A")
         .font(.caption)
         .foregroundColor(.secondary)
 }
@@ -708,6 +1022,36 @@ FieldNote/
 
 ---
 
+## Code Quality & Architecture Standards
+
+### SwiftUI Architecture Review Process
+
+After completing any UI screen or major component, run the SwiftUI architecture skills review to ensure code quality:
+
+**Skills Location:** `/Users/davidcontreras/claude-skills/swiftui-architecture-patterns/`
+
+**Review Checklist:**
+- [ ] Run SwiftUI architecture patterns skill review
+- [ ] Verify MVVM pattern compliance (@MainActor, @Published state)
+- [ ] Check state management (@State, @StateObject, @ObservedObject)
+- [ ] Validate navigation patterns (NavigationStack for iOS 16+)
+- [ ] Ensure async/await patterns for data operations
+- [ ] Confirm dependency injection patterns
+- [ ] Review error handling implementation
+
+**When to Run:**
+- After building any new View or ViewModel
+- Before committing UI changes
+- During code review process
+- When refactoring existing screens
+
+**Reference Implementation:**
+- Primary: Credit One Bank iOS (pure SwiftUI, iOS 16+)
+- Secondary: Scooters Coffee iOS (hybrid SwiftUI/UIKit)
+- Patterns: `~/.claude/skills/swiftui-architecture-patterns/swiftui-architecture-patterns.md`
+
+---
+
 ## Next Steps
 
 ### Before Building
@@ -717,13 +1061,80 @@ FieldNote/
 4. ✅ Sign up for weather API
 
 ### Start Building (v1.0)
-1. Create Xcode project (Step 1)
-2. Set up SwiftData models (Steps 2-4)
-3. Build Dashboard screen (Step 5)
-4. Integrate location services (Steps 7-8)
-5. **Integrate weather API (Step 9)**
-6. Build Entry screen (Steps 10-12)
-7. Build bottom navigation (Steps 13-16)
-8. Test offline + field conditions (Steps 18-20)
+1. ✅ Create Xcode project (Step 1)
+2. ✅ Set up SwiftData models (Steps 2-4)
+3. ✅ Build Dashboard screen (Step 5) - **MVVM refactored with password protection**
+4. ✅ Add Dashboard interactions:
+   - ✅ Tap gesture to JournalCard → Navigate to JournalTabView
+   - ✅ Settings icon on card → Journal settings sheet
+   - ✅ Delete confirmation alert
+   - ✅ Password protection with biometric authentication
+   - ✅ Brute force protection (lockout mechanism)
+   - ✅ 43 unit tests (DashboardViewModel + KeychainManager)
+5. 🔲 Integrate location services (Steps 7-8)
+6. 🔲 **Integrate weather API (Step 9)**
+7. 🔲 Build Entry screen (Steps 10-12)
+8. 🔲 Build bottom navigation (Steps 13-16)
+9. 🔲 Test offline + field conditions (Steps 18-20)
 
-**Ready to build!** Start with v1.0 MVP and iterate based on real field feedback.
+### Current Status (Updated 2026-05-19)
+
+**Completed (v1.0 MVP Progress: 100% - Ready for Device Testing! 🚀):**
+- ✅ Dashboard UI with modern card design
+- ✅ Journal creation and management
+- ✅ Repository pattern with SwiftData backend
+- ✅ Password protection with Keychain integration
+- ✅ Biometric authentication (Face ID/Touch ID)
+- ✅ Comprehensive security (brute force protection, password hashing)
+- ✅ Production-grade architecture (MVVM, DI, protocol-based testing)
+- ✅ Test coverage: 43 unit tests across ViewModels and Services
+- ✅ CoreLocation integration with GPS tracking
+- ✅ Weather API integration (OpenWeatherMap)
+- ✅ Air Quality API integration (AQI, PM2.5, PM10)
+- ✅ New Log Entry screen (bento-style layout)
+- ✅ Logs List View with featured and compact card variants
+- ✅ **MapView with custom pins and callouts** (completed 2026-05-13)
+- ✅ Bottom tab navigation
+- ✅ SwiftData persistent storage with 6 sample logs
+- ✅ 10-second API timeout pattern
+- ✅ Proper async/await lifecycle management
+- ✅ **Log Editing** with title/notes/timestamp/GPS/weather refresh (completed 2026-05-19)
+- ✅ **Camera Integration** (completed 2026-05-13)
+  - ✅ CameraPickerRepresentable and PhotoPickerRepresentable
+  - ✅ PhotoStorageService for disk storage
+  - ✅ PhotoGalleryView with TabView slider
+  - ✅ Multiple photo support (up to 10 per selection)
+  - ✅ Camera capture and photo library import
+  - ✅ Add/delete photos with confirmation
+- ✅ **Audio Memo Recording + Transcription** (completed 2026-05-19)
+  - ✅ AudioMemo model with SwiftData relationships
+  - ✅ MultiAudioMemoView component
+  - ✅ Multiple memos per log with titles
+  - ✅ Automatic speech-to-text transcription
+  - ✅ Playback and deletion controls
+  - ✅ Integrated in NewLogView and EditLogView
+
+**Critical Blockers for v1.0 Launch: ✅ NONE - ALL FEATURES COMPLETE!**
+
+**All v1.0 Features Implemented:**
+1. ✅ **Log Editing** (completed 2026-05-19)
+2. ✅ **Camera Integration** (completed 2026-05-13)
+3. ✅ **Audio Memo Recording + Transcription** (completed 2026-05-19)
+
+See **"Required for v1.0 Launch"** section above for detailed specs.
+
+**Completed Post-Launch Features:**
+1. ✅ **Search and Filter** (v1.x) - COMPLETED 2026-05-13
+   - Dashboard: Search journals by name, sort by Most Recent/Oldest/A-Z/Z-A
+   - Logs List: Search by notes/transcription, dynamic header, same sort options
+   - Reusable components: SearchBar, FilterButton, FilterSheet, SortOption
+
+**Post-Launch Features (Priority Order):**
+1. 🔬 **Species Identification** (v1.1+) - ML-powered species recognition
+2. 📤 **Export Functionality** (v1.2) - Share logs, CSV export, PDF reports
+3. ☁️ **Cloud Sync** (v2.0) - Multi-device sync, team collaboration
+4. 🌤️ **Update Weather Data During Edits** (v1.5) - Refresh weather snapshots
+5. 📸 **Advanced Photo Gallery** (v1.x) - Full-screen viewer, annotations
+
+**Ready for physical device testing! All v1.0 features complete! 🚀**
+**Next Steps:** Device testing → TestFlight beta → v1.0 launch

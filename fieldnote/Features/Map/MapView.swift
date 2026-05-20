@@ -234,15 +234,38 @@ struct MapView: View {
             // Image Preview (reduced height to 70)
             ZStack(alignment: .topTrailing) {
                 // Show actual image from mediaURLs or placeholder
-                if !log.mediaURLs.isEmpty,
-                   let firstMediaURL = log.mediaURLs.first,
-                   let imageName = firstMediaURL.lastPathComponent.replacingOccurrences(of: ".jpg", with: "") as String? {
-                    Image(imageName)
-                        .resizable()
-                        .scaledToFill()
-                        .frame(height: 70)
-                        .clipped()
+                if !log.mediaURLs.isEmpty, let firstMediaURL = log.mediaURLs.first {
+                    AsyncImage(url: firstMediaURL) { phase in
+                        switch phase {
+                        case .success(let image):
+                            image
+                                .resizable()
+                                .scaledToFill()
+                                .frame(height: 70)
+                                .clipped()
+                        case .failure(_), .empty:
+                            // Fallback to placeholder if photo fails to load
+                            Rectangle()
+                                .fill(Color.surfaceContainerHigh)
+                                .frame(height: 70)
+                                .overlay(
+                                    Image(systemName: "camera")
+                                        .font(.system(size: 28))
+                                        .foregroundColor(.onSurfaceVariant.opacity(0.3))
+                                )
+                        @unknown default:
+                            Rectangle()
+                                .fill(Color.surfaceContainerHigh)
+                                .frame(height: 70)
+                                .overlay(
+                                    Image(systemName: "camera")
+                                        .font(.system(size: 28))
+                                        .foregroundColor(.onSurfaceVariant.opacity(0.3))
+                                )
+                        }
+                    }
                 } else {
+                    // No photos: show placeholder
                     Rectangle()
                         .fill(Color.surfaceContainerHigh)
                         .frame(height: 70)
@@ -286,7 +309,7 @@ struct MapView: View {
 
                     Spacer()
 
-                    NavigationLink(destination: EditLogView(log: log, journal: journal)) {
+                    NavigationLink(destination: LogDetailView(log: log, journal: journal)) {
                         Text("Details")
                             .font(.body(12, weight: .semibold))
                             .foregroundColor(.onPrimary)
@@ -407,19 +430,19 @@ struct MapView: View {
     log1.longitude = -123.9346
     log1.altitude = 182.0
     log1.weather = Weather(condition: "Clear", temperature: 18.5, humidity: 62, windSpeed: 3.2, icon: "01d", aqi: 1, pm25: 8.5, pm10: 12.3)
-    log1.mediaURLs = [URL(string: "file:///placeholder-field-1.jpg")!]
+    log1.mediaURLs = [] // No photos in preview - will show alternating gradient
 
     let log2 = Log(title: "Water Quality Sample", notes: "Water quality sample - pH 7.2")
     log2.latitude = 47.8612
     log2.longitude = -123.9361
     log2.altitude = 156.0
-    log2.mediaURLs = [URL(string: "file:///placeholder-field-2.jpg")!]
+    log2.mediaURLs = [] // No photos in preview - will show alternating gradient
 
     let log3 = Log(title: "Eagle Nest Observation", notes: "Eagle nest spotted in old growth Douglas fir")
     log3.latitude = 47.8585
     log3.longitude = -123.9320
     log3.altitude = 210.0
-    log3.mediaURLs = [URL(string: "file:///placeholder-field-1.jpg")!]
+    log3.mediaURLs = [] // No photos in preview - will show alternating gradient
 
     let log4 = Log(title: "Trail Erosion Assessment", notes: "Trail erosion assessment")
     log4.latitude = 47.8620

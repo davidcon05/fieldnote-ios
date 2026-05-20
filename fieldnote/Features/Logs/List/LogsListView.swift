@@ -172,29 +172,33 @@ struct FeaturedLogCardView: View {
 
     @State private var isExpanded = false
 
-    // Sample images for the first 3 featured cards
-    private var sampleImageName: String {
-        switch index {
-        case 0: return "forest_moss"
-        case 1: return "alpine_meadow"
-        case 2: return "tide_pools"
-        default: return "forest_moss"
-        }
-    }
-
     var body: some View {
         VStack(spacing: 0) {
                 // Image section with circular chevron button
                 ZStack(alignment: .bottomTrailing) {
-                    // Image or gradient placeholder
-                    if let uiImage = UIImage(named: sampleImageName) {
-                        Image(uiImage: uiImage)
-                            .resizable()
-                            .scaledToFill()
-                            .frame(height: 160)
-                            .clipped()
+                    // Priority: Use actual log photos, then fallback to alternating color gradients
+                    if !log.mediaURLs.isEmpty, let firstPhotoURL = log.mediaURLs.first {
+                        // Use actual photo from log
+                        AsyncImage(url: firstPhotoURL) { phase in
+                            switch phase {
+                            case .success(let image):
+                                image
+                                    .resizable()
+                                    .scaledToFill()
+                                    .frame(height: 160)
+                                    .clipped()
+                            case .failure(_), .empty:
+                                // Fallback to alternating gradient if photo fails to load
+                                alternatingGradient
+                                    .frame(height: 160)
+                            @unknown default:
+                                alternatingGradient
+                                    .frame(height: 160)
+                            }
+                        }
                     } else {
-                        weatherGradient
+                        // No photos: use alternating gradient based on index
+                        alternatingGradient
                             .frame(height: 160)
                     }
 
@@ -331,30 +335,24 @@ struct FeaturedLogCardView: View {
             .shadow(color: .black.opacity(0.04), radius: 2, x: 0, y: 1)
     }
 
-    private var weatherGradient: LinearGradient {
-        guard let weather = log.weather else {
-            return LinearGradient(
-                colors: [Color.gray.opacity(0.6), Color.gray.opacity(0.4)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-        }
+    private var alternatingGradient: LinearGradient {
+        // Alternating colors to avoid back-to-back same colors
+        let gradients: [(Color, Color)] = [
+            (Color.blue.opacity(0.6), Color.blue.opacity(0.4)),
+            (Color.green.opacity(0.6), Color.green.opacity(0.4)),
+            (Color.orange.opacity(0.6), Color.orange.opacity(0.4)),
+            (Color.purple.opacity(0.6), Color.purple.opacity(0.4)),
+            (Color.teal.opacity(0.6), Color.teal.opacity(0.4))
+        ]
 
-        let colors: [Color]
-        switch weather.condition.lowercased() {
-        case _ where weather.condition.contains("clear"):
-            colors = [Color.blue.opacity(0.7), Color.cyan.opacity(0.5)]
-        case _ where weather.condition.contains("cloud"):
-            colors = [Color.gray.opacity(0.6), Color.gray.opacity(0.4)]
-        case _ where weather.condition.contains("rain"):
-            colors = [Color.blue.opacity(0.8), Color.indigo.opacity(0.6)]
-        case _ where weather.condition.contains("snow"):
-            colors = [Color.cyan.opacity(0.7), Color.white.opacity(0.6)]
-        default:
-            colors = [Color.primaryColor.opacity(0.6), Color.secondaryColor.opacity(0.4)]
-        }
+        let gradientIndex = index % gradients.count
+        let selectedGradient = gradients[gradientIndex]
 
-        return LinearGradient(colors: colors, startPoint: .topLeading, endPoint: .bottomTrailing)
+        return LinearGradient(
+            colors: [selectedGradient.0, selectedGradient.1],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
     }
 
     private func celsiusToFahrenheit(_ celsius: Double) -> Double {

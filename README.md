@@ -123,6 +123,7 @@ open fieldnote.xcodeproj
 | Version | Focus | Timeline |
 |---------|-------|----------|
 | **v1.0** | GPS, weather, photos, notes, offline | 4-6 weeks |
+| **v1.5** | Land navigation (navigate to logged locations) | 2 weeks |
 | **v2.0** | Enhanced camera, photo overlays | 3-4 weeks |
 | **v3.0** | ARKit measurements, CoreML species ID | 4-6 weeks |
 
@@ -168,6 +169,20 @@ Personal learning project - not for commercial use.
 - ✅ Brute force protection (5 attempts, 5-minute lockout)
 - ✅ 43 comprehensive unit tests (DashboardViewModel + KeychainManager)
 
-**Last Updated:** 2026-05-19
-**Next Milestone:** Physical Device Testing → TestFlight Beta → v1.0 Launch
+**Last Updated:** 2026-05-20
+**Next Milestone:** Physical Device Testing → TestFlight Beta → v1.0 Launch → v1.5 Navigation
 **Status:** v1.0 MVP is 100% complete - all features implemented, ready for device validation
+
+## Planned Features
+
+**Land Navigation (v1.5)** - Planning Complete 2026-05-20
+- 🎯 Military-style land navigation for backcountry field work
+- 📍 Navigate to previously logged GPS locations
+- 📍 Drop custom waypoint pins for future navigation
+- 📏 Real-time distance tracking as you walk
+- 🔇 Audio callouts for screen-off navigation (phone in pocket)
+- 🔋 Background GPS tracking with 6-10% battery/hour (screen off)
+- 🗺️ Breadcrumb trail showing path taken
+- 🧭 Bearing indicator with compass arrow
+- 📖 Full spike documentation: [navigation-feature-spike.md](docs/research/navigation-feature-spike.md)
+- ⏱️ Est: 2 days implementation + 1 day testing per phase

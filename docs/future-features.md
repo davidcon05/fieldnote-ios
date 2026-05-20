@@ -465,6 +465,168 @@ let weather = try await weatherService.fetchWeather(
 
 ---
 
+## v1.5 Features (Post-v1.0 Launch)
+
+### Land Navigation Feature
+**Status:** Planning complete (spike documented)
+**Priority:** High (v1.5)
+
+**Goal:** Enable military-style land navigation for backcountry environmental scientists to navigate back to previously logged locations or custom waypoint markers.
+
+#### Core Requirements
+
+**Use Case:**
+Environmental scientist working 2km into backcountry needs to return to "Sample Site Alpha" from yesterday to collect follow-up reading. Wants to navigate with phone in pocket (screen off) to conserve battery during multi-hour field sessions.
+
+**Key Features (Phase 1 - MVP):**
+- Navigate to previously logged GPS locations
+- Real-time distance tracking (updates as user walks)
+- Large distance counter overlay (glanceable)
+- Audio callouts for screen-off navigation ("500 meters", "100 meters", "Arrived")
+- Background GPS tracking (screen locked, display off)
+- Battery-efficient: 6-10% per hour (vs 20-35% with screen on)
+- Visual line connecting current position to target
+- Cancel navigation button
+
+**Extended Features (Phase 2-3):**
+- Drop custom waypoint pins (mark parking, camp, sample sites)
+- Bearing indicator with compass arrow (cardinal directions)
+- Breadcrumb trail polyline (visual path history)
+- Elevation gain/loss display
+- Navigation history (past sessions)
+
+#### Technical Implementation
+
+**Approach:** MapKit + CoreLocation with background location updates
+
+**Key Technologies:**
+- `CLLocationManager` with `allowsBackgroundLocationUpdates = true`
+- `AVSpeechSynthesizer` for audio callouts
+- `MapPolyline` for breadcrumb trails
+- `NavigationTarget` protocol (unified interface for logs + waypoints)
+
+**Data Model:**
+```swift
+// New model for custom waypoints
+@Model
+class Waypoint {
+    var name: String  // "Base Camp", "Parking", etc.
+    var latitude: Double
+    var longitude: Double
+    var altitude: Double?
+    var timestamp: Date
+    var journal: Journal?
+}
+
+// Protocol for navigation targets
+protocol NavigationTarget {
+    var navigationName: String { get }
+    var coordinate: CLLocationCoordinate2D { get }
+    var altitude: Double? { get }
+}
+```
+
+**Battery Analysis:**
+- Screen OFF + GPS: 6-10% per hour ✅ Sustainable for 4+ hours
+- Screen ON + GPS: 20-35% per hour ❌ Phone dies in ~3 hours
+- **Conclusion:** Background location is essential requirement
+
+**Memory Analysis:**
+- 10km walk at 10m GPS intervals = 1,000 points
+- 16 bytes per coordinate (lat + lon) = 16 KB
+- With timestamps + altitude: 32 KB for 10km trail
+- **Conclusion:** Memory negligible, no optimization needed
+
+#### UI Mode System
+
+**Three Map Modes:**
+1. **VIEWING** (default): Browse map, tap pins to view details
+2. **NAVIGATING**: Large distance counter, minimal UI, audio callouts
+3. **PIN DROP**: Crosshair for placing waypoints
+
+**Design Philosophy:** Progressive disclosure - only show navigation UI when navigating
+
+#### Implementation Phases
+
+**Phase 1: Core Navigation (MVP)**
+- Est: 2 days (6-8 hrs implementation + 1 day testing)
+- Features: Distance tracking, audio callouts, background GPS, screen-off support
+- Files: MapView.swift, LocationManager.swift, NavigationAudioService.swift
+
+**Phase 2: Waypoint Dropping**
+- Est: 2 days (8-10 hrs implementation + 4-6 hrs testing)
+- Features: Drop pins, waypoint naming, navigate to waypoints
+- Files: Waypoint.swift, WaypointNameSheet.swift
+
+**Phase 3: Enhanced UX**
+- Est: 3 days (10-12 hrs implementation + 6-8 hrs testing)
+- Features: Bearing, compass, breadcrumbs, elevation
+- Files: NavigationSession.swift (optional breadcrumb persistence)
+
+**Phase 4: Polish & Settings**
+- Est: 2 days (8-10 hrs implementation + 4-6 hrs testing)
+- Features: User preferences, power modes, navigation history
+
+**Total Timeline:** ~9 days for full implementation
+
+#### Testing Strategy
+
+**1 Day Testing Estimate (Phase 1):**
+- 2 hours: Simulator (UI, state transitions, distance calculations)
+- 3 hours: Device Round 1 (permissions, screen-off, battery, GPS accuracy)
+- 3 hours: Bug fixes + re-testing
+
+**Field Testing Scenarios:**
+- Open terrain (best GPS baseline)
+- Forest canopy (GPS degradation)
+- Urban environment (multipath interference)
+- Battery stress test (4-hour session)
+- 100m, 1km, 5km+ distance validation
+
+#### Risks & Mitigations
+
+| Risk | Mitigation |
+|------|-----------|
+| GPS accuracy degrades in forest | Display accuracy indicator, don't announce arrival if uncertain |
+| Battery drains faster than expected | Low power mode, battery warnings, auto-stop at 10% |
+| Users deny "Always Allow" permission | Fallback to "When In Use" with screen-on requirement, clear explanation |
+| Audio callouts too frequent/annoying | Conservative defaults, easy mute toggle, user settings |
+
+#### Success Criteria
+
+**Quantitative:**
+- Distance accuracy within ±GPS margin (±5-15m typical)
+- Battery drain 6-10% per hour (screen off)
+- Update latency <1 second
+- No crashes during 4-hour session
+
+**Qualitative:**
+- User can successfully navigate to previous log without confusion
+- Audio callouts helpful, not annoying
+- UI clear and uncluttered
+- Feature works as expected offline
+- User feels confident using in field conditions
+
+#### Documentation
+
+**Full Spike:** [docs/research/navigation-feature-spike.md](../research/navigation-feature-spike.md)
+
+**Covers:**
+- Detailed technical analysis
+- Battery and memory benchmarks
+- UI/UX design mockups
+- Implementation checklists
+- Open questions and decisions
+- Comparison to competitor apps (AllTrails, Gaia GPS, OnX)
+
+**Key Finding:** MapKit + CoreLocation fully support this use case with no external dependencies required.
+
+**Recommendation:** ✅ Approved for implementation post-v1.0 launch
+
+**Milestone:** v1.5
+
+---
+
 ## v2.0+ Features
 
 ### Single-Entry Sharing (Export & Import)
@@ -1537,19 +1699,20 @@ if journal.isRecentlyActive {
 
 ---
 
-**Last Updated:** 2026-05-14
+**Last Updated:** 2026-05-20
 **Next Review:** After v1.0 MVP field testing
 
-**v1.0 Status Update (2026-05-14):**
+**v1.0 Status Update (2026-05-20):**
 - ✅ MapView completed (custom pins, callouts, live metrics, collapsible panel)
 - ✅ Audio Recording & Transcription completed (manual transcription, retry logic)
-- ⏳ Remaining for v1.0: Camera Integration (final blocker)
+- ✅ All v1.0 features complete (100%)
 - 📋 Device test plan created: `docs/testing/device-test-plan.md`
-- 🎯 MVP Progress: ~85% complete
+- 🚀 Ready for physical device testing → TestFlight Beta
 
-**Future Features Documentation (2026-05-14):**
-- 📝 Single-entry sharing strategy documented (v1.5)
+**Future Features Documentation (2026-05-20):**
+- 📝 **Land navigation feature spike complete** (v1.5) - `docs/research/navigation-feature-spike.md`
+- 📝 Single-entry sharing strategy documented (v1.5/v2.0)
 - 📝 Multi-user collaboration architecture documented (v2.0+)
 - 📝 Cross-platform authentication strategy documented (iOS → Android migration)
 - 📝 10-layer cloud backend architecture documented (Supabase-based)
-- ✅ Ready for validation before v2.0 implementation
+- ✅ Ready for validation before implementation

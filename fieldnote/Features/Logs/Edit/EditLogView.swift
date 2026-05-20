@@ -236,7 +236,7 @@ struct EditLogView: View {
             Button("Delete", role: .destructive) {
                 deleteLog()
             }
-            .disabled(deleteConfirmationText != "DELETE")
+            .disabled(deleteConfirmationText.trimmingCharacters(in: .whitespaces).uppercased() != "DELETE")
         } message: {
             Text("This will permanently delete this observation. This action cannot be undone.\n\nType DELETE to confirm.")
         }
@@ -388,7 +388,7 @@ struct EditLogView: View {
     }
 
     private func deleteLog() {
-        guard deleteConfirmationText == "DELETE" else { return }
+        guard deleteConfirmationText.trimmingCharacters(in: .whitespaces).uppercased() == "DELETE" else { return }
 
         // Remove log from journal and model context
         modelContext.delete(log)

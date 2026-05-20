@@ -17,6 +17,9 @@ struct LogDetailView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
 
+    @StateObject private var audioService = AudioRecorderService()
+    @State private var playingMemoId: UUID? = nil
+
     @State private var showingEditView = false
     @State private var showingDeleteConfirmation = false
     @State private var deleteConfirmationText = ""
@@ -104,7 +107,7 @@ struct LogDetailView: View {
             Button("Delete", role: .destructive) {
                 deleteLog()
             }
-            .disabled(deleteConfirmationText != "DELETE")
+            .disabled(deleteConfirmationText.trimmingCharacters(in: .whitespaces).uppercased() != "DELETE")
         } message: {
             Text("This will permanently delete this observation. This action cannot be undone.\n\nType DELETE to confirm.")
         }
@@ -337,7 +340,15 @@ struct LogDetailView: View {
 
             VStack(spacing: 12) {
                 ForEach(Array(log.audioMemos.enumerated()), id: \.element.id) { index, memo in
-                    AudioMemoDisplayCard(memo: memo, index: index + 1)
+                    AudioMemoDisplayCard(
+                        memo: memo,
+                        index: index + 1,
+                        audioService: audioService,
+                        isPlaying: playingMemoId == memo.id,
+                        onPlay: {
+                            playAudio(memo: memo)
+                        }
+                    )
                 }
             }
         }
@@ -532,10 +543,27 @@ struct LogDetailView: View {
     }
 
     private func deleteLog() {
-        guard deleteConfirmationText == "DELETE" else { return }
+        guard deleteConfirmationText.trimmingCharacters(in: .whitespaces).uppercased() == "DELETE" else { return }
 
         modelContext.delete(log)
         dismiss()
+    }
+
+    // MARK: - Audio Playback
+
+    private func playAudio(memo: AudioMemo) {
+        if playingMemoId == memo.id {
+            // Already playing this memo - stop it
+            audioService.stopPlayback()
+            playingMemoId = nil
+        } else {
+            // Stop any currently playing audio
+            audioService.stopPlayback()
+
+            // Play the selected memo
+            audioService.playAudio(from: memo.audioURL)
+            playingMemoId = memo.id
+        }
     }
 }
 
@@ -597,6 +625,9 @@ struct TelemetryCard: View {
 struct AudioMemoDisplayCard: View {
     let memo: AudioMemo
     let index: Int
+    let audioService: AudioRecorderService
+    let isPlaying: Bool
+    let onPlay: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -633,18 +664,16 @@ struct AudioMemoDisplayCard: View {
                     .cornerRadius(8)
             }
 
-            // Audio Player Controls (placeholder)
+            // Audio Player Controls
             HStack(spacing: 12) {
-                Button(action: {
-                    // TODO: Implement audio playback
-                }) {
+                Button(action: onPlay) {
                     Circle()
-                        .fill(memo.transcription != nil ? Color.primaryColor : Color.primaryColor.opacity(0.1))
+                        .fill(Color.primaryColor)
                         .frame(width: 40, height: 40)
                         .overlay {
-                            Image(systemName: "play.fill")
+                            Image(systemName: isPlaying ? "pause.fill" : "play.fill")
                                 .font(.system(size: 16))
-                                .foregroundColor(memo.transcription != nil ? .onPrimary : .primaryColor)
+                                .foregroundColor(.onPrimary)
                         }
                 }
 

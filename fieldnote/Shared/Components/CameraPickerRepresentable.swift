@@ -43,11 +43,11 @@ struct CameraPickerRepresentable: UIViewControllerRepresentable {
             if let image = info[.originalImage] as? UIImage {
                 parent.selectedImage = image
             }
-            picker.dismiss(animated: true)
+            parent.dismiss()
         }
 
         func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
-            picker.dismiss(animated: true)
+            parent.dismiss()
         }
     }
 }

@@ -241,7 +241,7 @@ struct MapView: View {
                             image
                                 .resizable()
                                 .scaledToFill()
-                                .frame(height: 70)
+                                .frame(height: 100)
                                 .clipped()
                         case .failure(_), .empty:
                             // Fallback to placeholder if photo fails to load
@@ -492,5 +492,171 @@ struct MapView: View {
 
     return NavigationStack {
         MapView(journal: journal)
+    }
+}
+
+#Preview("Callout Visible") {
+    let journal = Journal(name: "Olympic National Park")
+
+    let log = Log(title: "Rare Moss Discovery", notes: "Found rare moss species near creek\nSample collected for lab analysis")
+    log.latitude = 47.8597
+    log.longitude = -123.9346
+    log.altitude = 182.0
+    log.weather = Weather(condition: "Clear", temperature: 18.5, humidity: 62, windSpeed: 3.2, icon: "01d", aqi: 1, pm25: 8.5, pm10: 12.3)
+    log.mediaURLs = []
+
+    journal.logs.append(log)
+
+    return NavigationStack {
+        MapViewWithCallout(journal: journal, selectedLog: log)
+    }
+}
+
+// Helper view for preview with callout
+private struct MapViewWithCallout: View {
+    let journal: Journal
+    @State var selectedLog: Log?
+
+    init(journal: Journal, selectedLog: Log) {
+        self.journal = journal
+        _selectedLog = State(initialValue: selectedLog)
+    }
+
+    var body: some View {
+        let logsWithGPS = journal.logs.filter { $0.latitude != nil && $0.longitude != nil }
+
+        ZStack {
+            Map {
+                ForEach(logsWithGPS) { log in
+                    if let lat = log.latitude, let lon = log.longitude {
+                        Annotation("", coordinate: CLLocationCoordinate2D(latitude: lat, longitude: lon)) {
+                            Circle()
+                                .fill(Color.orange)
+                                .frame(width: 40, height: 40)
+                        }
+                    }
+                }
+            }
+            .mapStyle(.hybrid)
+
+            // Custom Callout Popup
+            if let selectedLog = selectedLog {
+                VStack(spacing: 0) {
+                    Spacer()
+
+                    // Connection line from pin to callout
+                    Rectangle()
+                        .fill(Color.orange.opacity(0.4))
+                        .frame(width: 2, height: 60)
+
+                    logCalloutCard(for: selectedLog, journal: journal)
+                        .padding(.horizontal, 32)
+                        .padding(.bottom, 40)
+                }
+            }
+        }
+    }
+
+    private func logCalloutCard(for log: Log, journal: Journal) -> some View {
+        VStack(spacing: 0) {
+            // Image Preview (reduced height to 70)
+            ZStack(alignment: .topTrailing) {
+                // Show actual image from mediaURLs or placeholder
+                if !log.mediaURLs.isEmpty, let firstMediaURL = log.mediaURLs.first {
+                    AsyncImage(url: firstMediaURL) { phase in
+                        switch phase {
+                        case .success(let image):
+                            image
+                                .resizable()
+                                .scaledToFill()
+                                .frame(height: 100)
+                                .clipped()
+                        case .failure(_), .empty:
+                            // Fallback to placeholder if photo fails to load
+                            Rectangle()
+                                .fill(Color.surfaceContainerHigh)
+                                .frame(height: 100)
+                                .overlay(
+                                    Image(systemName: "camera")
+                                        .font(.system(size: 28))
+                                        .foregroundColor(.onSurfaceVariant.opacity(0.3))
+                                )
+                        @unknown default:
+                            Rectangle()
+                                .fill(Color.surfaceContainerHigh)
+                                .frame(height: 100)
+                                .overlay(
+                                    Image(systemName: "camera")
+                                        .font(.system(size: 28))
+                                        .foregroundColor(.onSurfaceVariant.opacity(0.3))
+                                )
+                        }
+                    }
+                } else {
+                    // No photos: show placeholder
+                    Rectangle()
+                        .fill(Color.surfaceContainerHigh)
+                        .frame(height: 100)
+                        .overlay(
+                            Image(systemName: "camera")
+                                .font(.system(size: 28))
+                                .foregroundColor(.onSurfaceVariant.opacity(0.3))
+                        )
+                }
+
+                // Close Button (top-right of image)
+                Button {
+                    withAnimation(.spring(response: 0.3)) {
+                        selectedLog = nil
+                    }
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundColor(.onSurface)
+                        .frame(width: 24, height: 24)
+                        .background(Color.white.opacity(0.95))
+                        .clipShape(Circle())
+                        .shadow(color: .black.opacity(0.2), radius: 2, x: 0, y: 1)
+                }
+                .padding(8)
+            }
+
+            // Card Content (increased height with more spacing)
+            VStack(alignment: .leading, spacing: 10) {
+                // First line of notes
+                Text(log.notes.components(separatedBy: .newlines).first ?? log.notes)
+                    .font(.headline(14, weight: .bold))
+                    .foregroundColor(.onSurface)
+                    .lineLimit(1)
+
+                // Date and Details Button on same line
+                HStack {
+                    Text(log.timestamp.formatted(date: .abbreviated, time: .shortened))
+                        .font(.body(11))
+                        .foregroundColor(.onSurfaceVariant)
+
+                    Spacer()
+
+                    NavigationLink(destination: LogDetailView(log: log, journal: journal)) {
+                        Text("Details")
+                            .font(.body(12, weight: .semibold))
+                            .foregroundColor(.onPrimary)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background(Color.primaryColor)
+                            .cornerRadius(6)
+                    }
+                }
+            }
+            .padding(16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .background(Color.white)
+        .cornerRadius(12)
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color.outlineVariant.opacity(0.2), lineWidth: 1)
+        )
+        .shadow(color: .black.opacity(0.15), radius: 16, x: 0, y: 4)
     }
 }

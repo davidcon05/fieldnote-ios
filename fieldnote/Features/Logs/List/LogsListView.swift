@@ -106,6 +106,18 @@ struct LogsListView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.background)
+        .onAppear {
+            print("📊 LogsListView loaded with \(journal.logs.count) logs")
+            for (index, log) in journal.logs.enumerated() {
+                print("  Log \(index + 1): \(log.mediaURLs.count) photos, \(log.audioMemos.count) audio memos")
+                if !log.mediaURLs.isEmpty {
+                    print("    Photos: \(log.mediaURLs.map { $0.lastPathComponent })")
+                }
+                if !log.audioMemos.isEmpty {
+                    print("    Audio: \(log.audioMemos.map { $0.audioURL.lastPathComponent })")
+                }
+            }
+        }
         .navigationDestination(item: $selectedLog) { log in
             LogDetailView(log: log, journal: journal)
         }

@@ -320,7 +320,11 @@ struct NewLogView: View {
 
         do {
             try modelContext.save()
+            print("✅ Log saved with \(photoURLs.count) photos and \(audioMemos.count) audio memos")
+            print("📸 Photo URLs: \(photoURLs.map { $0.lastPathComponent })")
+            print("🎤 Audio URLs: \(audioMemos.map { $0.audioURL.lastPathComponent })")
             journal.touch() // Update journal's lastModified
+            try modelContext.save() // Save again after touch
             showingSaveConfirmation = true
         } catch {
             print("❌ Error saving log: \(error)")

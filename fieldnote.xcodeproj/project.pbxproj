@@ -397,9 +397,10 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 4WRV8A29AF;
+				DEVELOPMENT_TEAM = 9BUF9JB2Q7;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Field Note";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "We need your location to tag log entries";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Fieldnote needs microphone access to record audio memos during field observation";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Fieldnote uses speech recognition to transcribe your audio memos into searchable field notes";
@@ -432,9 +433,10 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 4WRV8A29AF;
+				DEVELOPMENT_TEAM = 9BUF9JB2Q7;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Field Note";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "We need your location to tag log entries";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Fieldnote needs microphone access to record audio memos during field observation";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Fieldnote uses speech recognition to transcribe your audio memos into searchable field notes";

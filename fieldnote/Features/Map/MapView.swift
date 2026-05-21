@@ -295,8 +295,8 @@ struct MapView: View {
 
             // Card Content (increased height with more spacing)
             VStack(alignment: .leading, spacing: 10) {
-                // First line of notes
-                Text(log.notes.components(separatedBy: .newlines).first ?? log.notes)
+                // Title
+                Text(log.title)
                     .font(.headline(14, weight: .bold))
                     .foregroundColor(.onSurface)
                     .lineLimit(1)
@@ -623,8 +623,8 @@ private struct MapViewWithCallout: View {
 
             // Card Content (increased height with more spacing)
             VStack(alignment: .leading, spacing: 10) {
-                // First line of notes
-                Text(log.notes.components(separatedBy: .newlines).first ?? log.notes)
+                // Title
+                Text(log.title)
                     .font(.headline(14, weight: .bold))
                     .foregroundColor(.onSurface)
                     .lineLimit(1)

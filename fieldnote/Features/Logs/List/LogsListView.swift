@@ -106,18 +106,6 @@ struct LogsListView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.background)
-        .onAppear {
-            print("📊 LogsListView loaded with \(journal.logs.count) logs")
-            for (index, log) in journal.logs.enumerated() {
-                print("  Log \(index + 1): \(log.mediaURLs.count) photos, \(log.audioMemos.count) audio memos")
-                if !log.mediaURLs.isEmpty {
-                    print("    Photos: \(log.mediaURLs.map { $0.lastPathComponent })")
-                }
-                if !log.audioMemos.isEmpty {
-                    print("    Audio: \(log.audioMemos.map { $0.audioURL.lastPathComponent })")
-                }
-            }
-        }
         .navigationDestination(item: $selectedLog) { log in
             LogDetailView(log: log, journal: journal)
         }
@@ -257,7 +245,7 @@ struct FeaturedLogCardView: View {
                         // Expanded: Show title, date, full notes, and weather data
                         VStack(alignment: .leading, spacing: 8) {
                             // Title
-                            Text(log.notes.components(separatedBy: ".").first ?? log.notes)
+                            Text(log.title)
                                 .font(.body(16, weight: .bold))
                                 .foregroundColor(.onSurface)
                                 .lineLimit(2)
@@ -324,7 +312,7 @@ struct FeaturedLogCardView: View {
                     } else {
                         // Collapsed: Just show title and date
                         VStack(alignment: .leading, spacing: 8) {
-                            Text(log.notes.components(separatedBy: ".").first ?? log.notes)
+                            Text(log.title)
                                 .font(.body(16, weight: .bold))
                                 .foregroundColor(.onSurface)
                                 .lineLimit(2)

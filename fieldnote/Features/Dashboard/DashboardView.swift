@@ -87,11 +87,12 @@ import SwiftUI
                               destination: Group {
                                   if let journal = viewModel.journalToUnlock {
                                       JournalContainerView(journal: journal)
-                                  } else {
-                                      EmptyView()
                                   }
                               },
-                              isActive: $viewModel.shouldNavigateToJournal
+                              isActive: Binding(
+                                  get: { viewModel.shouldNavigateToJournal && viewModel.journalToUnlock != nil },
+                                  set: { viewModel.shouldNavigateToJournal = $0 }
+                              )
                           ) {
                               EmptyView()
                           }

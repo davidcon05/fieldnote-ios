@@ -328,6 +328,7 @@ struct FeaturedLogCardView: View {
                     }
                 }
                 .padding(16)
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
             .background(Color.white)
             .cornerRadius(12)

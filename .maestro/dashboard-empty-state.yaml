@@ -1,0 +1,13 @@
+# Test dashboard empty state
+appId: com.davidcontreras.fieldnote
+tags:
+  - smoke
+  - dashboard
+---
+- launchApp
+
+# Verify empty state appears
+- assertVisible: "Journals"
+- assertVisible: "No Journals Yet"
+- assertVisible: "Start by adding a new journal"
+- assertVisible: "New Journal"

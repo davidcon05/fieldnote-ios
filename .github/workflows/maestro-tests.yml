@@ -1,14 +1,13 @@
 name: Maestro UI Tests
 
-# Manual trigger only for now (experimental)
 on:
-  workflow_dispatch:
-
-# Uncomment to enable automatic runs:
-#   push:
-#     branches: [ main, develop ]
-#   pull_request:
-#     branches: [ main ]
+  workflow_dispatch:  # Manual trigger
+  push:
+    branches: [ main ]
+    paths:
+      - 'fieldnote/**'
+      - '.maestro/**'
+      - '.github/workflows/maestro-tests.yml'
 
 jobs:
   test-ios:
@@ -34,31 +33,23 @@ jobs:
             -derivedDataPath build \
             build
 
-      - name: Run Maestro Tests (Local)
-        if: false  # Disabled until Maestro Cloud is configured
+      - name: Install Maestro CLI
         run: |
-          # Install Maestro CLI
           curl -Ls "https://get.maestro.mobile.dev" | bash
-          export PATH="$HOME/.maestro/bin:$PATH"
+          echo "$HOME/.maestro/bin" >> $GITHUB_PATH
 
-          # Boot simulator
-          xcrun simctl boot "iPhone 15 Pro" || true
+      - name: Boot iOS Simulator
+        run: |
+          xcrun simctl boot "iPhone 15 Pro" || echo "Simulator already booted"
+          xcrun simctl list devices | grep "iPhone 15 Pro"
 
-          # Run tests locally
-          maestro test --app build/Build/Products/Debug-iphonesimulator/fieldnote.app .maestro/
-
-      - name: Run Maestro Tests (Cloud)
-        if: false  # Enable when ready to use Maestro Cloud
-        uses: mobile-dev-inc/[email protected]
-        with:
-          api-key: ${{ secrets.MAESTRO_API_KEY }}
-          project-id: ${{ secrets.MAESTRO_PROJECT_ID }}
-          app-file: build/Build/Products/Debug-iphonesimulator/fieldnote.app
-          # Optional: Run only smoke tests
-          # tags: smoke
-          # Optional: Specify device
-          # device-model: iPhone 15 Pro
-          # device-os: iOS 17
+      - name: Run Maestro Tests
+        run: |
+          maestro test \
+            --app build/Build/Products/Debug-iphonesimulator/fieldnote.app \
+            --format junit \
+            --output maestro-results.xml \
+            .maestro/
 
       - name: Upload test results
         if: always()
@@ -66,5 +57,12 @@ jobs:
         with:
           name: maestro-test-results
           path: |
-            .maestro/screenshots/
-            maestro-*.log
+            maestro-results.xml
+            ~/.maestro/tests/
+
+      - name: Publish Test Results
+        if: always()
+        uses: EnricoMi/publish-unit-test-result-action/composite@v2
+        with:
+          files: maestro-results.xml
+          check_name: Maestro Test Results

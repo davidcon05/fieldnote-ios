@@ -43,6 +43,7 @@ maestro test --continuous .maestro/create-journal.yaml
 
 ## Test Files
 
+- **`dashboard-empty-state.yaml`** - Smoke test for empty dashboard state
 - **`create-journal.yaml`** - Smoke test for creating a journal
 - **`search-journals.yaml`** - Test search functionality
 
@@ -55,10 +56,11 @@ maestro test --continuous .maestro/create-journal.yaml
 
 ## CI/CD
 
-Maestro tests run in GitHub Actions via manual trigger:
-- Workflow: `.github/workflows/maestro-tests.yml`
-- Trigger: Actions → Maestro UI Tests → Run workflow
-- Status: Currently configured for local testing (Cloud integration disabled)
+Maestro tests run automatically in GitHub Actions:
+- **Trigger:** Push to `main` branch (when fieldnote code or tests change)
+- **Manual:** Actions → Maestro UI Tests → Run workflow
+- **Workflow:** `.github/workflows/maestro-tests.yml`
+- **Status:** Runs on GitHub-hosted macOS runners with iPhone 15 Pro simulator
 
 ## Troubleshooting
 

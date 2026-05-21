@@ -29,9 +29,22 @@
 		01ACAB382FAA7CA0002C45CC /* fieldnoteUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = fieldnoteUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		019318F02FBF2F8200FF619B /* Exceptions for "fieldnote" folder in "fieldnote" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 01ACAB1E2FAA7C9D002C45CC /* fieldnote */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		01ACAB212FAA7C9D002C45CC /* fieldnote */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				019318F02FBF2F8200FF619B /* Exceptions for "fieldnote" folder in "fieldnote" target */,
+			);
 			path = fieldnote;
 			sourceTree = "<group>";
 		};
@@ -400,6 +413,7 @@
 				DEVELOPMENT_TEAM = 9BUF9JB2Q7;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = fieldnote/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Field Note";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "We need your location to tag log entries";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Fieldnote needs microphone access to record audio memos during field observation";
@@ -437,6 +451,7 @@
 				DEVELOPMENT_TEAM = 9BUF9JB2Q7;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = fieldnote/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Field Note";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "We need your location to tag log entries";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Fieldnote needs microphone access to record audio memos during field observation";

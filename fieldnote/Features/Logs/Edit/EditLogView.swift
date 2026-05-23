@@ -198,6 +198,7 @@ struct EditLogView: View {
                 .padding(.top, 24)
                 .padding(.bottom, 180) // Extra space for fixed bottom buttons
             }
+            }
             .background(Color.background)
 
             // Fixed Bottom Buttons

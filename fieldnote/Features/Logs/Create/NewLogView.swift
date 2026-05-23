@@ -170,6 +170,7 @@ struct NewLogView: View {
                 .padding(.top, 24)
                 .padding(.bottom, 100) // Extra space for fixed bottom button
             }
+            }
             .background(Color.background)
 
             // Fixed Bottom Button
@@ -413,10 +414,8 @@ struct NewLogView: View {
     }
 
     private func addPhoto(_ image: UIImage) {
-        let storage = PhotoStorageService()
-        if let url = storage.savePhoto(image) {
-            photoURLs.append(url)
-        }
+        guard let url = PhotoStorageService.shared.savePhoto(image) else { return }
+        photoURLs.append(url)
     }
 
     private func deletePhoto(at index: Int) {
@@ -427,8 +426,7 @@ struct NewLogView: View {
         photoURLs.remove(at: index)
 
         // Delete file from disk
-        let storage = PhotoStorageService()
-        storage.deletePhoto(at: url)
+        PhotoStorageService.shared.deletePhoto(at: url)
 
         // Adjust selected index if needed
         if selectedPhotoIndex >= photoURLs.count {

@@ -79,7 +79,6 @@ import SwiftUI
                               }
                               .padding(.horizontal, 24)
                               .padding(.bottom, 100)
-                              .dismissKeyboardOnTap()
                           }
                       }
                       .background(Color.surfaceBackground)

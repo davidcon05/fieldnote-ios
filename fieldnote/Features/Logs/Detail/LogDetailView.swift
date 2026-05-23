@@ -298,17 +298,18 @@ struct LogDetailView: View {
 
     private var titleSection: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(log.timestamp.formatted(date: .abbreviated, time: .shortened).uppercased())
-                .font(.label(10, weight: .bold))
-                .foregroundColor(.primaryColor)
-                .tracking(1.5)
-
             Text(log.title)
                 .font(.display(28, weight: .black))
                 .foregroundColor(.onBackground)
                 .tracking(-0.5)
+            
+            Text(log.timestamp.formatted(date: .abbreviated, time: .shortened).uppercased())
+                .font(.label(12, weight: .bold))
+                .foregroundColor(.primaryColor)
+                .tracking(1.5)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.top, 12)
     }
 
     // MARK: - Field Notes Section

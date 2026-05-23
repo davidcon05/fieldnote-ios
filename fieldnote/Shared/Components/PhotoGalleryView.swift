@@ -128,7 +128,7 @@ struct PhotoGalleryView: View {
                         Image(systemName: "plus.circle.fill")
                         Text("Add More")
                     }
-                    .font(.body(12, weight: .medium))
+                    .font(.body(16, weight: .medium))
                     .foregroundColor(.primaryColor)
                 }
             }

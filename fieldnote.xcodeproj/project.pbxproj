@@ -415,6 +415,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = fieldnote/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Field Note";
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "Unlock password-protected journals with Face ID or Touch ID";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "We need your location to tag log entries";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Fieldnote needs microphone access to record audio memos during field observation";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Fieldnote uses speech recognition to transcribe your audio memos into searchable field notes";
@@ -453,6 +454,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = fieldnote/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Field Note";
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "Unlock password-protected journals with Face ID or Touch ID";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "We need your location to tag log entries";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Fieldnote needs microphone access to record audio memos during field observation";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Fieldnote uses speech recognition to transcribe your audio memos into searchable field notes";

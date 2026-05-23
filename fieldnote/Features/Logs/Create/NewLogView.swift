@@ -27,6 +27,12 @@ struct NewLogView: View {
     @State private var isLoadingWeather = false
     @State private var showingSaveConfirmation = false
     @State private var weatherTask: Task<Void, Never>?
+    @State private var selectedPhotoIndex: Int = 0
+    @State private var showingPhotoSource = false
+    @State private var showingCamera = false
+    @State private var showingPhotoPicker = false
+    @State private var capturedImage: UIImage?
+    @State private var selectedImages: [UIImage] = []
 
     init(journal: Journal) {
         self.journal = journal
@@ -37,44 +43,70 @@ struct NewLogView: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 32) {
-                // Session Header
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Capture Portal")
-                        .font(.label(10, weight: .bold))
-                        .foregroundColor(.tertiary)
-                        .tracking(1.5)
-
-                    Text("NEW LOG ENTRY")
-                        .font(.display(24, weight: .black))
-                        .foregroundColor(.onBackground)
-                        .tracking(-0.5)
+        ZStack(alignment: .bottom) {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                // Hero Photo Section (if photos exist)
+                if !photoURLs.isEmpty {
+                    HeroPhotoSection(
+                        photoURLs: photoURLs,
+                        selectedPhotoIndex: min(selectedPhotoIndex, photoURLs.count - 1),
+                        location: locationManager.location,
+                        altitude: locationManager.location?.altitude,
+                        mode: .editable,
+                        showGradientOverlay: false,
+                        showMetadata: false,
+                        onPhotoSelect: { index in
+                            selectedPhotoIndex = index
+                        },
+                        onAddPhoto: {
+                            showingPhotoSource = true
+                        },
+                        onDeletePhoto: { index in
+                            deletePhoto(at: index)
+                        }
+                    )
                 }
 
-                // Title Field (Required)
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("TITLE (REQUIRED)")
-                        .font(.label(10, weight: .bold))
-                        .foregroundColor(.tertiary)
-                        .tracking(1.5)
+                VStack(alignment: .leading, spacing: 32) {
+                    // Session Header
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Capture Portal")
+                            .font(.label(10, weight: .bold))
+                            .foregroundColor(.tertiary)
+                            .tracking(1.5)
 
-                    TextField("Enter log title...", text: $title)
-                        .font(.body(16, weight: .semibold))
-                        .textFieldStyle(.plain)
-                        .padding(16)
-                        .background(Color.white)
-                        .cornerRadius(12)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(title.isEmpty ? Color.error.opacity(0.5) : Color.outlineVariant, lineWidth: 1)
-                        )
-                }
+                        Text("NEW LOG ENTRY")
+                            .font(.display(24, weight: .black))
+                            .foregroundColor(.onBackground)
+                            .tracking(-0.5)
+                    }
 
-                // Bento Grid Layout
-                VStack(spacing: 16) {
-                    // Row 1: Photo Gallery (Large)
-                    PhotoGalleryView(photoURLs: $photoURLs)
+                    // Title Field (Required)
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("TITLE (REQUIRED)")
+                            .font(.label(10, weight: .bold))
+                            .foregroundColor(.tertiary)
+                            .tracking(1.5)
+
+                        TextField("Enter log title...", text: $title)
+                            .font(.body(16, weight: .semibold))
+                            .textFieldStyle(.plain)
+                            .padding(16)
+                            .background(Color.white)
+                            .cornerRadius(12)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(title.isEmpty ? Color.error.opacity(0.5) : Color.outlineVariant, lineWidth: 1)
+                            )
+                    }
+
+                    // Bento Grid Layout
+                    VStack(spacing: 16) {
+                        // Row 1: Photo Gallery (only show when no photos - for adding first photo)
+                        if photoURLs.isEmpty {
+                            PhotoGalleryView(photoURLs: $photoURLs)
+                        }
 
                     // Row 2: Audio Memos
                     MultiAudioMemoView(audioMemos: $audioMemos)
@@ -133,8 +165,23 @@ struct NewLogView: View {
                                 .stroke(Color.outlineVariant, lineWidth: 1)
                         )
                 }
+                }
+                .padding(.horizontal, 24)
+                .padding(.top, 24)
+                .padding(.bottom, 100) // Extra space for fixed bottom button
+            }
+            .background(Color.background)
 
-                // Finalize Entry Button
+            // Fixed Bottom Button
+            VStack(spacing: 0) {
+                // Gradient fade at top of button bar
+                LinearGradient(
+                    colors: [Color.background.opacity(0), Color.background],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .frame(height: 20)
+
                 Button(action: saveLog) {
                     HStack(spacing: 12) {
                         Image(systemName: "checkmark.circle.fill")
@@ -152,11 +199,47 @@ struct NewLogView: View {
                 .disabled(!isValid)
                 .scaleEffect(isValid ? 1.0 : 0.98)
                 .animation(.easeInOut(duration: 0.2), value: isValid)
+                .padding(.horizontal, 24)
+                .padding(.bottom, 24)
+                .background(Color.background)
             }
-            .padding(.horizontal, 24)
-            .padding(.vertical, 24)
         }
-        .background(Color.background)
+        .confirmationDialog("Add Photo", isPresented: $showingPhotoSource, titleVisibility: .visible) {
+            if UIImagePickerController.isSourceTypeAvailable(.camera) {
+                Button("Take Photo") {
+                    showingCamera = true
+                }
+            }
+            Button("Choose from Library") {
+                showingPhotoPicker = true
+            }
+            Button("Cancel", role: .cancel) {}
+        }
+        .sheet(isPresented: $showingCamera) {
+            CameraPickerRepresentable(
+                selectedImage: $capturedImage,
+                sourceType: .camera
+            )
+            .ignoresSafeArea()
+        }
+        .sheet(isPresented: $showingPhotoPicker) {
+            PhotoPickerRepresentable(selectedImages: $selectedImages)
+                .ignoresSafeArea()
+        }
+        .onChange(of: capturedImage) { _, newImage in
+            if let image = newImage {
+                addPhoto(image)
+                capturedImage = nil
+            }
+        }
+        .onChange(of: selectedImages) { _, newImages in
+            if !newImages.isEmpty {
+                for image in newImages {
+                    addPhoto(image)
+                }
+                selectedImages = []
+            }
+        }
         .onAppear {
             locationManager.requestPermission()
             locationManager.startUpdatingLocation()
@@ -329,6 +412,30 @@ struct NewLogView: View {
         }
     }
 
+    private func addPhoto(_ image: UIImage) {
+        let storage = PhotoStorageService()
+        if let url = storage.savePhoto(image) {
+            photoURLs.append(url)
+        }
+    }
+
+    private func deletePhoto(at index: Int) {
+        guard index < photoURLs.count else { return }
+        let url = photoURLs[index]
+
+        // Remove from array
+        photoURLs.remove(at: index)
+
+        // Delete file from disk
+        let storage = PhotoStorageService()
+        storage.deletePhoto(at: url)
+
+        // Adjust selected index if needed
+        if selectedPhotoIndex >= photoURLs.count {
+            selectedPhotoIndex = max(0, photoURLs.count - 1)
+        }
+    }
+
     private func resetForm() {
         title = ""
         notes = ""
@@ -336,6 +443,7 @@ struct NewLogView: View {
         audioMemos = []
         currentWeather = nil
         weatherError = nil
+        selectedPhotoIndex = 0
         // Location keeps updating for next log
     }
 }

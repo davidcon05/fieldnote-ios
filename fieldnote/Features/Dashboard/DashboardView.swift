@@ -204,6 +204,9 @@ import SwiftUI
               } message: {
                   Text(viewModel.errorMessage ?? "")
               }
+              .onAppear {
+                  viewModel.loadJournals()
+              }
           }
       }
 

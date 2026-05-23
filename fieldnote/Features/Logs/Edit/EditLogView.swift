@@ -66,8 +66,9 @@ struct EditLogView: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 0) {
+        ZStack(alignment: .bottom) {
+            ScrollView {
+                VStack(spacing: 0) {
                 // Hero Photo Section (when photos exist)
                 if !editedPhotoURLs.isEmpty {
                     HeroPhotoSection(
@@ -192,7 +193,24 @@ struct EditLogView: View {
                             }
                         }
                     }
+                }
+                .padding(.horizontal, 24)
+                .padding(.top, 24)
+                .padding(.bottom, 180) // Extra space for fixed bottom buttons
+            }
+            .background(Color.background)
 
+            // Fixed Bottom Buttons
+            VStack(spacing: 0) {
+                // Gradient fade at top of button bar
+                LinearGradient(
+                    colors: [Color.background.opacity(0), Color.background],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .frame(height: 20)
+
+                VStack(spacing: 12) {
                     // Save Changes Button
                     Button(action: saveChanges) {
                         HStack(spacing: 12) {
@@ -228,10 +246,10 @@ struct EditLogView: View {
                     }
                 }
                 .padding(.horizontal, 24)
-                .padding(.vertical, 24)
+                .padding(.bottom, 24)
+                .background(Color.background)
             }
         }
-        .background(Color.background)
         .navigationTitle("Edit Log")
         .navigationBarTitleDisplayMode(.inline)
         .alert("Refresh Weather Data?", isPresented: $showingWeatherRefreshAlert) {

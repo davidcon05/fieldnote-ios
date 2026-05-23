@@ -74,14 +74,16 @@ jobs:
 
           cat test_results.md
 
+      - name: Install xcparse
+        if: always()
+        run: brew install chargepoint/xcparse/xcparse
+
       - name: Convert to JUnit XML
         if: always()
         run: |
-          # Install trainer
-          gem install trainer
-
-          # Convert xcresult to JUnit XML
-          trainer --path TestResults.xcresult --output_directory ./
+          xcparse logs --output-format junit TestResults.xcresult > results.junit
+          echo "Generated JUnit XML:"
+          head -20 results.junit
 
       - name: Publish test report
         if: always()

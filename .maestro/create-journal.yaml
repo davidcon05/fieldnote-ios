@@ -1,17 +1,23 @@
 # Basic smoke test: Create a new journal
-appId: com.davidcontreras.fieldnote
-tags:
-  - smoke
-  - critical
+appId: com.davidcon.fieldnote
 ---
-- launchApp
+- launchApp:
+    clearState: true
 - assertVisible: "Journals"
 
 # Create new journal
 - tapOn: "New Journal"
-- assertVisible: "Journal Name"
+- assertVisible: "JOURNAL NAME"
+
+# Type into the text field
+- tapOn: "Enter name"
 - inputText: "Maestro Test Journal"
+
+# Tap Create button
 - tapOn: "Create"
+
+# Verify we're back on dashboard (not in sheet)
+- assertVisible: "Journals"
 
 # Verify journal created
 - assertVisible: "Maestro Test Journal"

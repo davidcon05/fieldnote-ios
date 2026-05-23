@@ -1,10 +1,8 @@
 # Test dashboard empty state
-appId: com.davidcontreras.fieldnote
-tags:
-  - smoke
-  - dashboard
+appId: com.davidcon.fieldnote
 ---
-- launchApp
+- launchApp:
+    clearState: true
 
 # Verify empty state appears
 - assertVisible: "Journals"

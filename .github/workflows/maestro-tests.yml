@@ -92,8 +92,9 @@ jobs:
 
       - name: Run Maestro Tests
         run: |
-          # Run Maestro tests - it will use the appId from the test files
+          # Run Maestro tests on iOS platform - it will use the appId from the test files
           maestro test \
+            --platform ios \
             --format junit \
             --output maestro-results.xml \
             .maestro/

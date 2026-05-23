@@ -20,7 +20,21 @@ struct fieldnoteApp: App {
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
         do {
-            return try ModelContainer(for: schema, configurations: [modelConfiguration])
+            let container = try ModelContainer(for: schema, configurations: [modelConfiguration])
+
+            // Clear state when running UI tests (equivalent to Maestro's clearState: true)
+            if ProcessInfo.processInfo.arguments.contains("--uitesting") {
+                let context = ModelContext(container)
+                do {
+                    // Delete all journals (cascade will delete logs and audio memos)
+                    try context.delete(model: Journal.self)
+                    try context.save()
+                } catch {
+                    print("Failed to clear UI test state: \(error)")
+                }
+            }
+
+            return container
         } catch {
             fatalError("Could not create ModelContainer: \(error)")
         }

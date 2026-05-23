@@ -23,7 +23,7 @@ struct LogTests {
         #expect(log.id != UUID(uuidString: "00000000-0000-0000-0000-000000000000"))
         #expect(log.notes == "")
         #expect(log.mediaURLs.isEmpty)
-        #expect(log.audioMemoURL == nil)
+        #expect(log.audioMemos.isEmpty)
         #expect(log.latitude == nil)
         #expect(log.longitude == nil)
         #expect(log.altitude == nil)
@@ -42,7 +42,7 @@ struct LogTests {
         // Then
         #expect(log.notes == notes)
         #expect(log.mediaURLs.isEmpty)
-        #expect(log.audioMemoURL == nil)
+        #expect(log.audioMemos.isEmpty)
     }
 
     @Test("Initialize log with media URLs creates log with media")
@@ -63,48 +63,46 @@ struct LogTests {
     @Test("Initialize log with audio memo creates log with audio")
     func initWithAudioMemo() {
         // Given
-        let audioURL = URL(fileURLWithPath: "/path/to/memo.m4a")
-
-        // When
-        let log = Log(notes: "Test", audioMemoURL: audioURL)
+        let log = Log(notes: "Test")
+        // Note: AudioMemo relationship would be set separately via SwiftData
 
         // Then
-        #expect(log.audioMemoURL == audioURL)
+        #expect(log.audioMemos.isEmpty)
     }
 
     // MARK: - Validation Tests
 
-    @Test("Log with non-empty notes is valid")
-    func validWithNonEmptyNotes() {
+    @Test("Log with non-empty title is valid")
+    func validWithNonEmptyTitle() {
         // Given
-        let log = Log(notes: "Valid observation notes")
+        let log = Log(title: "Valid observation title")
 
         // Then
         #expect(log.isValid)
     }
 
-    @Test("Log with empty notes is invalid")
-    func invalidWithEmptyNotes() {
+    @Test("Log with empty title is invalid")
+    func invalidWithEmptyTitle() {
         // Given
-        let log = Log(notes: "")
+        let log = Log(title: "")
 
         // Then
         #expect(!log.isValid)
     }
 
-    @Test("Log with whitespace-only notes is invalid")
-    func invalidWithWhitespaceOnlyNotes() {
+    @Test("Log with whitespace-only title is invalid")
+    func invalidWithWhitespaceOnlyTitle() {
         // Given
-        let log = Log(notes: "   \n\t   ")
+        let log = Log(title: "   \n\t   ")
 
         // Then
         #expect(!log.isValid)
     }
 
-    @Test("Log with notes containing whitespace padding is valid")
-    func validWithNotesContainingWhitespace() {
+    @Test("Log with title containing whitespace padding is valid")
+    func validWithTitleContainingWhitespace() {
         // Given
-        let log = Log(notes: "  Valid notes with padding  ")
+        let log = Log(title: "  Valid title with padding  ")
 
         // Then
         #expect(log.isValid)
@@ -240,16 +238,12 @@ struct LogTests {
 
     // MARK: - Audio Memo Tests
 
-    @Test("Audio memo URL can be set to nil")
-    func audioMemoURLCanBeSetToNil() {
-        // Given
-        let audioURL = URL(fileURLWithPath: "/memo.m4a")
-        let log = Log(notes: "Test", audioMemoURL: audioURL)
-
-        // When
-        log.audioMemoURL = nil
+    @Test("Audio memos default to empty array")
+    func audioMemosDefaultToEmptyArray() {
+        // Given / When
+        let log = Log(notes: "Test")
 
         // Then
-        #expect(log.audioMemoURL == nil)
+        #expect(log.audioMemos.isEmpty)
     }
 }

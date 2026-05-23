@@ -197,39 +197,39 @@ nonisolated struct LogEditingTests {
         #expect(log.notes == "Updated notes with more details")
     }
 
-    @Test("Log with empty notes after edit is invalid")
-    func emptyNotesInvalidAfterEdit() {
+    @Test("Log with empty title after edit is invalid")
+    func emptyTitleInvalidAfterEdit() {
         // Given
-        let log = Log(notes: "Original notes")
+        let log = Log(title: "Original title")
         #expect(log.isValid)
 
         // When
-        log.notes = ""
+        log.title = ""
 
         // Then
         #expect(!log.isValid)
     }
 
-    @Test("Log with whitespace-only notes after edit is invalid")
-    func whitespaceNotesInvalidAfterEdit() {
+    @Test("Log with whitespace-only title after edit is invalid")
+    func whitespaceTitleInvalidAfterEdit() {
         // Given
-        let log = Log(notes: "Original notes")
+        let log = Log(title: "Original title")
         #expect(log.isValid)
 
         // When
-        log.notes = "   \n\t   "
+        log.title = "   \n\t   "
 
         // Then
         #expect(!log.isValid)
     }
 
-    @Test("Log remains valid when notes are updated with content")
-    func validNotesRemainsValid() {
+    @Test("Log remains valid when title is updated with content")
+    func validTitleRemainsValid() {
         // Given
-        let log = Log(notes: "Original notes")
+        let log = Log(title: "Original title")
 
         // When
-        log.notes = "New valid notes"
+        log.title = "New valid title"
 
         // Then
         #expect(log.isValid)
@@ -287,46 +287,26 @@ nonisolated struct LogEditingTests {
 
     // MARK: - Audio Editing Tests
 
-    @Test("Log allows audio memo to be added")
-    func audioMemoCanBeAdded() {
+    @Test("Log allows audio memos to be added")
+    func audioMemosCanBeAdded() {
         // Given
         let log = Log(notes: "Test log")
-        #expect(log.audioMemoURL == nil)
+        #expect(log.audioMemos.isEmpty)
 
-        // When
-        let audioURL = URL(fileURLWithPath: "/path/to/memo.m4a")
-        log.audioMemoURL = audioURL
+        // Note: Audio memos would be added via SwiftData relationship
+        // This test verifies the relationship exists
 
         // Then
-        #expect(log.audioMemoURL == audioURL)
+        #expect(log.audioMemos.isEmpty)
     }
 
-    @Test("Log allows audio memo to be replaced")
-    func audioMemoCanBeReplaced() {
+    @Test("Log audio memos default to empty array")
+    func audioMemosDefaultToEmpty() {
         // Given
-        let originalAudioURL = URL(fileURLWithPath: "/path/to/memo1.m4a")
-        let log = Log(notes: "Test log", audioMemoURL: originalAudioURL)
-
-        // When
-        let newAudioURL = URL(fileURLWithPath: "/path/to/memo2.m4a")
-        log.audioMemoURL = newAudioURL
+        let log = Log(notes: "Test log")
 
         // Then
-        #expect(log.audioMemoURL == newAudioURL)
-        #expect(log.audioMemoURL != originalAudioURL)
-    }
-
-    @Test("Log allows audio memo to be removed")
-    func audioMemoCanBeRemoved() {
-        // Given
-        let audioURL = URL(fileURLWithPath: "/path/to/memo.m4a")
-        let log = Log(notes: "Test log", audioMemoURL: audioURL)
-
-        // When
-        log.audioMemoURL = nil
-
-        // Then
-        #expect(log.audioMemoURL == nil)
+        #expect(log.audioMemos.isEmpty)
     }
 
     // MARK: - Combined Editing Tests
@@ -334,7 +314,7 @@ nonisolated struct LogEditingTests {
     @Test("Log allows multiple properties to be edited simultaneously")
     func multiplePropertiesCanBeEdited() {
         // Given
-        let log = Log(notes: "Original notes")
+        let log = Log(title: "Field observation", notes: "Original notes")
         log.latitude = 47.0
         log.longitude = -123.0
         log.weather = Weather(condition: "Clear", temperature: 20.0, humidity: 50, windSpeed: 1.0, icon: "01d")

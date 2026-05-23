@@ -38,11 +38,6 @@ jobs:
           curl -Ls "https://get.maestro.mobile.dev" | bash
           echo "$HOME/.maestro/bin" >> $GITHUB_PATH
 
-      - name: List Available Simulators
-        run: |
-          echo "Available iOS Simulators:"
-          xcrun simctl list devices available --json | jq -r '.devices | to_entries[] | select(.key | contains("iOS")) | .value[] | select(.isAvailable == true) | "\(.name) (\(.udid))"'
-
       - name: Boot iOS Simulator
         run: |
           # Try to find iPhone 15 Pro first, then fallback to any iPhone 15 or iPhone 16
@@ -73,17 +68,6 @@ jobs:
           # Wait for simulator to be ready
           xcrun simctl bootstatus "$DEVICE_UDID"
 
-      - name: Verify Maestro Setup
-        run: |
-          echo "Maestro version:"
-          maestro --version
-          echo ""
-          echo "Maestro can see these devices:"
-          maestro test --help || true
-          echo ""
-          echo "Simulator status:"
-          xcrun simctl list devices | grep Booted
-
       - name: Install App on Simulator
         run: |
           # Install the app on the booted simulator
@@ -107,10 +91,3 @@ jobs:
           path: |
             maestro-results.xml
             ~/.maestro/tests/
-
-      - name: Publish Test Results
-        if: always()
-        uses: EnricoMi/publish-unit-test-result-action/composite@v2
-        with:
-          files: maestro-results.xml
-          check_name: Maestro Test Results

@@ -43,6 +43,16 @@ struct fieldnoteApp: App {
     var body: some Scene {
         WindowGroup {
             DashboardViewWrapper()
+                .onAppear {
+                    // Disable animations during UI tests for faster, more reliable execution
+                    if ProcessInfo.processInfo.arguments.contains("--uitesting") {
+                        UIView.setAnimationsEnabled(false)
+                        UIApplication.shared.connectedScenes
+                            .compactMap { $0 as? UIWindowScene }
+                            .flatMap { $0.windows }
+                            .forEach { $0.layer.speed = 100 }
+                    }
+                }
         }
         .modelContainer(sharedModelContainer)
     }

@@ -92,23 +92,15 @@ struct LogDetailView: View {
                 }
             }
 
-            // MARK: - Future Feature: Share/Export (Hidden for now)
-            // Uncomment when share/export functionality is implemented
-            /*
             ToolbarItem(placement: .navigationBarTrailing) {
-                Menu {
-                    Button(action: { shareLog() }) {
-                        Label("Share", systemImage: "square.and.arrow.up")
-                    }
-                    Button(action: { exportLog() }) {
-                        Label("Export", systemImage: "arrow.down.doc")
-                    }
-                } label: {
-                    Image(systemName: "ellipsis.circle")
-                        .foregroundColor(.onSurfaceVariant)
+                Button(action: {
+                    showingEditView = true
+                }) {
+                    Image(systemName: "square.and.pencil")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(.primaryColor)
                 }
             }
-            */
         }
         .navigationDestination(isPresented: $showingEditView) {
             EditLogView(log: log, journal: journal)

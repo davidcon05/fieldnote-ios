@@ -26,8 +26,9 @@ struct WeatherDataCard: View {
                     endPoint: .bottomTrailing
                 )
 
-                // Weather Icon
-                if isLoading {
+                // Weather Icon or Spinner
+                if isLoading || weather == nil {
+                    // Show spinner when loading OR when no data yet
                     ProgressView()
                         .tint(.white)
                         .scaleEffect(1.5)
@@ -35,10 +36,6 @@ struct WeatherDataCard: View {
                     weatherIcon(for: weather.icon)
                         .font(.system(size: 48))
                         .foregroundColor(.white)
-                } else {
-                    Image(systemName: "cloud.sun.fill")
-                        .font(.system(size: 48))
-                        .foregroundColor(.white.opacity(0.5))
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -76,37 +73,45 @@ struct WeatherDataCard: View {
                         .font(.body(12))
                         .foregroundColor(.error)
                         .lineLimit(2)
-                } else if let weather = weather, let location = location {
+                } else {
+                    // Always show the structure with data or placeholders
                     HStack(spacing: 16) {
                         // Temperature
                         DataPoint(
                             label: "TEMP",
-                            value: String(format: "%.0f°F", celsiusToFahrenheit(weather.temperature))
+                            value: weather.map { String(format: "%.0f°F", celsiusToFahrenheit($0.temperature)) } ?? "--"
                         )
 
                         // Humidity
                         DataPoint(
                             label: "HUMIDITY",
-                            value: "\(weather.humidity)%"
+                            value: weather.map { "\($0.humidity)%" } ?? "--"
                         )
+
+                        // Loading spinner if acquiring
+                        if isLoading {
+                            ProgressView()
+                                .scaleEffect(0.8)
+                                .tint(.primaryColor)
+                        }
                     }
 
                     HStack(spacing: 16) {
                         // Altitude
                         DataPoint(
                             label: "ALTITUDE",
-                            value: String(format: "%.0fm", location.altitude)
+                            value: location.map { String(format: "%.0fm", $0.altitude) } ?? "--"
                         )
 
                         // Wind Speed
                         DataPoint(
                             label: "WIND",
-                            value: String(format: "%.1f m/s", weather.windSpeed)
+                            value: weather.map { String(format: "%.1f m/s", $0.windSpeed) } ?? "--"
                         )
                     }
 
                     // Air Quality (if available)
-                    if let aqi = weather.aqi, let aqiDesc = weather.aqiDescription {
+                    if let weather = weather, let aqi = weather.aqi, let aqiDesc = weather.aqiDescription {
                         HStack(spacing: 16) {
                             DataPoint(
                                 label: "AIR QUALITY",
@@ -122,10 +127,6 @@ struct WeatherDataCard: View {
                             }
                         }
                     }
-                } else {
-                    Text("Waiting for location data...")
-                        .font(.body(12))
-                        .foregroundColor(.onSurfaceVariant)
                 }
             }
             .padding(24)

@@ -26,7 +26,6 @@ struct EditLogView: View {
     @State private var editedTitle: String
     @State private var editedNotes: String
     @State private var editedPhotoURLs: [URL]
-    @State private var editedTimestamp: Date
     @State private var editedLatitude: Double?
     @State private var editedLongitude: Double?
     @State private var editedAltitude: Double?
@@ -61,7 +60,6 @@ struct EditLogView: View {
         _editedTitle = State(initialValue: log.title)
         _editedNotes = State(initialValue: log.notes)
         _editedPhotoURLs = State(initialValue: log.mediaURLs)
-        _editedTimestamp = State(initialValue: log.timestamp)
         _editedLatitude = State(initialValue: log.latitude)
         _editedLongitude = State(initialValue: log.longitude)
         _editedAltitude = State(initialValue: log.altitude)
@@ -74,7 +72,7 @@ struct EditLogView: View {
                 if !editedPhotoURLs.isEmpty {
                     HeroPhotoSection(
                         photoURLs: editedPhotoURLs,
-                        selectedPhotoIndex: selectedPhotoIndex,
+                        selectedPhotoIndex: min(selectedPhotoIndex, editedPhotoURLs.count - 1),
                         location: currentLocation,
                         altitude: editedAltitude,
                         mode: .editable,
@@ -85,12 +83,15 @@ struct EditLogView: View {
                         },
                         onAddPhoto: {
                             showingPhotoSource = true
+                        },
+                        onDeletePhoto: { index in
+                            deletePhoto(at: index)
                         }
                     )
                 }
 
                 VStack(alignment: .leading, spacing: 32) {
-                    // Session Header
+                    // Session Header with timestamp
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Edit Entry")
                             .font(.label(10, weight: .bold))
@@ -101,6 +102,11 @@ struct EditLogView: View {
                             .font(.display(24, weight: .black))
                             .foregroundColor(.onBackground)
                             .tracking(-0.5)
+
+                        Text("Created: \(log.timestamp.formatted(date: .abbreviated, time: .shortened))")
+                            .font(.body(14))
+                            .foregroundColor(.onSurfaceVariant)
+                            .padding(.top, 4)
                     }
 
                     // Title Editor (Required)
@@ -122,25 +128,6 @@ struct EditLogView: View {
                             )
                     }
 
-                    // Timestamp Editor
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("TIMESTAMP")
-                            .font(.label(10, weight: .bold))
-                            .foregroundColor(.tertiary)
-                            .tracking(1.5)
-
-                        DatePicker("", selection: $editedTimestamp, displayedComponents: [.date, .hourAndMinute])
-                            .datePickerStyle(.compact)
-                            .labelsHidden()
-                            .padding(16)
-                            .background(Color.white)
-                            .cornerRadius(12)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .stroke(Color.outlineVariant, lineWidth: 1)
-                            )
-                    }
-
                     // Bento Grid Layout
                     VStack(spacing: 16) {
                         // Row 1: Photo Gallery (only show when no photos - for adding first photo)
@@ -150,37 +137,6 @@ struct EditLogView: View {
 
                     // Row 2: Audio Memos
                     MultiAudioMemoView(audioMemos: audioMemosBinding)
-
-                    // Row 3: GPS Telemetry
-                    GPSTelemetryCard(
-                        location: currentLocation,
-                        isLoading: isRefreshingGPS,
-                        error: nil,
-                        onRefresh: {
-                            showingGPSRefreshAlert = true
-                        }
-                    )
-
-                    // Row 3: Weather Data (Read-only with refresh option)
-                    VStack(alignment: .leading, spacing: 8) {
-                        WeatherDataCard(
-                            weather: log.weather,
-                            location: currentLocation,
-                            isLoading: isRefreshingWeather,
-                            error: weatherRefreshError,
-                            onRefresh: {
-                                showingWeatherRefreshAlert = true
-                            }
-                        )
-
-                        if log.weather != nil {
-                            Text("CAPTURED AT \(log.timestamp.formatted(date: .abbreviated, time: .shortened))")
-                                .font(.label(10, weight: .bold))
-                                .foregroundColor(.tertiary)
-                                .tracking(1.5)
-                                .padding(.horizontal, 16)
-                        }
-                    }
                     }
 
                     // Field Notes Section (Optional)
@@ -201,6 +157,40 @@ struct EditLogView: View {
                                 RoundedRectangle(cornerRadius: 12)
                                     .stroke(Color.outlineVariant, lineWidth: 1)
                             )
+                    }
+
+                    // Telemetry Section
+                    VStack(spacing: 16) {
+                        // GPS Telemetry
+                        GPSTelemetryCard(
+                            location: currentLocation,
+                            isLoading: isRefreshingGPS,
+                            error: nil,
+                            onRefresh: {
+                                showingGPSRefreshAlert = true
+                            }
+                        )
+
+                        // Weather Data (Read-only with refresh option)
+                        VStack(alignment: .leading, spacing: 8) {
+                            WeatherDataCard(
+                                weather: log.weather,
+                                location: currentLocation,
+                                isLoading: isRefreshingWeather,
+                                error: weatherRefreshError,
+                                onRefresh: {
+                                    showingWeatherRefreshAlert = true
+                                }
+                            )
+
+                            if log.weather != nil {
+                                Text("CAPTURED AT \(log.timestamp.formatted(date: .abbreviated, time: .shortened))")
+                                    .font(.label(10, weight: .bold))
+                                    .foregroundColor(.tertiary)
+                                    .tracking(1.5)
+                                    .padding(.horizontal, 16)
+                            }
+                        }
                     }
 
                     // Save Changes Button
@@ -445,7 +435,6 @@ struct EditLogView: View {
         log.notes = editedNotes
         log.mediaURLs = editedPhotoURLs
         // Note: Audio memos are edited directly through MultiAudioMemoView binding
-        log.timestamp = editedTimestamp
         log.latitude = editedLatitude
         log.longitude = editedLongitude
         log.altitude = editedAltitude
@@ -473,6 +462,22 @@ struct EditLogView: View {
     private func addPhotos(_ images: [UIImage]) {
         for image in images {
             addPhoto(image)
+        }
+    }
+
+    private func deletePhoto(at index: Int) {
+        guard index < editedPhotoURLs.count else { return }
+        let url = editedPhotoURLs[index]
+
+        // Remove from array
+        editedPhotoURLs.remove(at: index)
+
+        // Delete file from disk
+        photoStorage.deletePhoto(at: url)
+
+        // Adjust selected index if needed
+        if selectedPhotoIndex >= editedPhotoURLs.count {
+            selectedPhotoIndex = max(0, editedPhotoURLs.count - 1)
         }
     }
 }

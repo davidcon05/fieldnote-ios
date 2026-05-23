@@ -332,24 +332,34 @@ import SwiftUI
                   if journal.isPasswordProtected {
                       themeHeaderView
                   } else if let coverURL = journal.coverPhotoURL {
-                      AsyncImage(url: coverURL) { image in
-                          image
-                              .resizable()
-                              .aspectRatio(16/9, contentMode: .fill)
-                              .frame(height: 140)
-                              .clipped()
-                      } placeholder: {
-                          themeHeaderView
+                      AsyncImage(url: coverURL) { phase in
+                          switch phase {
+                          case .success(let image):
+                              image
+                                  .resizable()
+                                  .scaledToFill()
+                                  .frame(height: 140)
+                                  .clipped()
+                          case .failure(_), .empty:
+                              themeHeaderView
+                          @unknown default:
+                              themeHeaderView
+                          }
                       }
                   } else if let firstMediaURL = journal.logs.first?.mediaURLs.first {
-                      AsyncImage(url: firstMediaURL) { image in
-                          image
-                              .resizable()
-                              .aspectRatio(16/9, contentMode: .fill)
-                              .frame(height: 140)
-                              .clipped()
-                      } placeholder: {
-                          themeHeaderView
+                      AsyncImage(url: firstMediaURL) { phase in
+                          switch phase {
+                          case .success(let image):
+                              image
+                                  .resizable()
+                                  .scaledToFill()
+                                  .frame(height: 140)
+                                  .clipped()
+                          case .failure(_), .empty:
+                              themeHeaderView
+                          @unknown default:
+                              themeHeaderView
+                          }
                       }
                   } else {
                       themeHeaderView

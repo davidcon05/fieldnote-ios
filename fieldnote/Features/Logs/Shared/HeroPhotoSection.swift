@@ -22,6 +22,7 @@ struct HeroPhotoSection: View {
 
     let onPhotoSelect: ((Int) -> Void)?
     let onAddPhoto: (() -> Void)?
+    let onDeletePhoto: ((Int) -> Void)?
 
     enum Mode {
         case readOnly
@@ -39,7 +40,8 @@ struct HeroPhotoSection: View {
         showGradientOverlay: Bool = true,
         showMetadata: Bool = true,
         onPhotoSelect: ((Int) -> Void)? = nil,
-        onAddPhoto: (() -> Void)? = nil
+        onAddPhoto: (() -> Void)? = nil,
+        onDeletePhoto: ((Int) -> Void)? = nil
     ) {
         self.photoURLs = photoURLs
         self.selectedPhotoIndex = selectedPhotoIndex
@@ -50,6 +52,7 @@ struct HeroPhotoSection: View {
         self.showMetadata = showMetadata
         self.onPhotoSelect = onPhotoSelect
         self.onAddPhoto = onAddPhoto
+        self.onDeletePhoto = onDeletePhoto
     }
 
     var body: some View {
@@ -102,6 +105,30 @@ struct HeroPhotoSection: View {
                             startPoint: .top,
                             endPoint: .bottom
                         )
+                    }
+
+                    // Delete button overlay (only in editable mode, top-right)
+                    if mode == .editable {
+                        VStack {
+                            HStack {
+                                Spacer()
+                                Button(action: {
+                                    onDeletePhoto?(selectedPhotoIndex)
+                                }) {
+                                    ZStack {
+                                        Circle()
+                                            .fill(Color.black.opacity(0.6))
+                                            .frame(width: 44, height: 44)
+
+                                        Image(systemName: "trash.fill")
+                                            .font(.system(size: 18))
+                                            .foregroundColor(.white)
+                                    }
+                                }
+                                .padding(16)
+                            }
+                            Spacer()
+                        }
                     }
 
                     // Meta Overlays (optional)

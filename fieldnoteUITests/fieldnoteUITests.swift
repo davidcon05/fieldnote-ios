@@ -9,24 +9,91 @@ import XCTest
 
 final class fieldnoteUITests: XCTestCase {
 
-    override func setUpWithError() throws {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
+    var app: XCUIApplication!
 
-        // In UI tests it is usually best to stop immediately when a failure occurs.
+    override func setUpWithError() throws {
         continueAfterFailure = false
 
-        // In UI tests it’s important to set the initial state - such as interface orientation - required for your tests before they run. The setUp method is a good place to do this.
+        app = XCUIApplication()
+
+        // Clear app state before each test (equivalent to Maestro's clearState: true)
+        app.launchArguments = ["--uitesting"]
+        app.launch()
     }
 
-    override func tearDownWithError() throws {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
+    // MARK: - Test Suite (Matching Maestro tests)
+
+    func test_verifyDashboardEmptyState() throws {
+        _ = app.exists
+        var journals: XCUIElement { app.staticTexts["No Journals Yet"].firstMatch }
+        var startAdding: XCUIElement { app.staticTexts["Start by adding a new journal"].firstMatch }
+        var newJournal: XCUIElement { app.staticTexts["New Journal"].firstMatch }
+        
+        XCTAssertTrue(journals.exists)
+        XCTAssertTrue(startAdding.exists)
+        XCTAssertTrue(newJournal.exists)
     }
 
-    @MainActor
-    func testLaunchPerformance() throws {
-        // This measures how long it takes to launch your application.
-        measure(metrics: [XCTApplicationLaunchMetric()]) {
-            XCUIApplication().launch()
-        }
+    func test_verifyCreateJournal() throws {
+        _ = app.exists
+        var newJournal: XCUIElement { app.buttons["New Journal"].firstMatch }
+        
+        // Tap New Journal button
+        XCTAssertTrue(newJournal.exists)
+        newJournal.tap()
+
+        // Verify sheet appears
+        var journalNameLabel: XCUIElement { app.staticTexts["JOURNAL NAME"].firstMatch }
+        XCTAssertTrue(journalNameLabel.exists)
+
+        // Type into text field
+        var textField: XCUIElement { app.textFields["Enter name"].firstMatch }
+        XCTAssertTrue(textField.exists)
+        textField.tap()
+        textField.typeText("XCUITest Journal")
+
+        // Tap Create button
+        var createButton: XCUIElement { app.buttons["Create"].firstMatch }
+        var titleLabel: XCUIElement { app.staticTexts["Journals"].firstMatch }
+        XCTAssertTrue(createButton.exists)
+        createButton.tap()
+
+        // Verify back on dashboard
+        XCTAssertTrue(titleLabel.exists)
+
+        // Verify journal created
+        var xcuiJournal: XCUIElement { app.staticTexts["XCUITest Journal"].firstMatch }
+        XCTAssertTrue(xcuiJournal.exists)
+    }
+
+    func test_verifySearchJournals() throws {
+        // Create a journal to search for
+        _ = app.exists
+        var newJournalButton: XCUIElement { app.buttons["New Journal"].firstMatch }
+        XCTAssertTrue(newJournalButton.exists)
+        newJournalButton.tap()
+
+        var textField: XCUIElement { app.textFields["Enter name"].firstMatch }
+        XCTAssertTrue(textField.exists)
+        textField.tap()
+        textField.typeText("Search Test Journal")
+
+        var createButton: XCUIElement { app.buttons["Create"].firstMatch }
+        XCTAssertTrue(createButton.exists)
+        createButton.tap()
+
+        // Wait for dashboard
+        var titleLabel: XCUIElement { app.staticTexts["Journals"].firstMatch }
+        XCTAssertTrue(titleLabel.exists)
+
+        // Tap search field
+        var searchField: XCUIElement { app.textFields["Search Journals..."].firstMatch }
+        XCTAssertTrue(searchField.exists)
+        searchField.tap()
+        searchField.typeText("Search")
+
+        // Verify journal appears in search results
+        var searchTestLabel: XCUIElement { app.staticTexts["Search Test Journal"].firstMatch }
+        XCTAssertTrue(searchTestLabel.exists)
     }
 }

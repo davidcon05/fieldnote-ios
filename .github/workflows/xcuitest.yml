@@ -30,7 +30,8 @@ jobs:
             -scheme fieldnote \
             -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
             -only-testing:fieldnoteUITests \
-            -resultBundlePath TestResults.xcresult
+            -resultBundlePath TestResults.xcresult \
+            -verbose
 
       - name: Upload test results
         if: always()

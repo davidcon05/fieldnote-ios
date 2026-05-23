@@ -29,7 +29,21 @@ struct LogDetailView: View {
         ScrollView {
             VStack(spacing: 0) {
                 // Hero Section: Immersive Media Header
-                heroSection
+                HeroPhotoSection(
+                    photoURLs: log.mediaURLs,
+                    selectedPhotoIndex: selectedPhotoIndex,
+                    location: hasGPSData ? CLLocation(latitude: log.latitude!, longitude: log.longitude!) : nil,
+                    altitude: log.altitude,
+                    mode: .readOnly,
+                    showGradientOverlay: true,
+                    showMetadata: true,
+                    onPhotoSelect: { index in
+                        selectedPhotoIndex = index
+                    },
+                    onAddPhoto: {
+                        showingEditView = true
+                    }
+                )
 
                 // Content Section
                 VStack(spacing: 32) {
@@ -110,187 +124,6 @@ struct LogDetailView: View {
             .disabled(deleteConfirmationText.trimmingCharacters(in: .whitespaces).uppercased() != "DELETE")
         } message: {
             Text("This will permanently delete this observation. This action cannot be undone.\n\nType DELETE to confirm.")
-        }
-    }
-
-    // MARK: - Hero Section
-
-    private var heroImageHeight: CGFloat { 320 } // Fixed height ~40% of iPhone screen
-
-    private var heroSection: some View {
-        VStack(spacing: 8) {
-            // Primary Media Display
-            if !log.mediaURLs.isEmpty {
-                ZStack(alignment: .bottom) {
-                    AsyncImage(url: log.mediaURLs[selectedPhotoIndex]) { phase in
-                        switch phase {
-                        case .empty:
-                            Rectangle()
-                                .fill(Color.surfaceContainerHigh)
-                                .frame(maxWidth: .infinity)
-                                .frame(height: heroImageHeight)
-                                .overlay {
-                                    ProgressView()
-                                }
-                        case .success(let image):
-                            image
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                                .frame(maxWidth: .infinity)
-                                .frame(height: heroImageHeight)
-                                .clipped()
-                        case .failure:
-                            Rectangle()
-                                .fill(Color.surfaceContainerHigh)
-                                .frame(maxWidth: .infinity)
-                                .frame(height: heroImageHeight)
-                                .overlay {
-                                    Image(systemName: "photo")
-                                        .font(.system(size: 48))
-                                        .foregroundColor(.onSurfaceVariant)
-                                }
-                        @unknown default:
-                            EmptyView()
-                        }
-                    }
-
-                    // Gradient overlay
-                    LinearGradient(
-                        colors: [
-                            Color.black.opacity(0.6),
-                            Color.clear,
-                            Color.clear,
-                            Color.black.opacity(0.85)
-                        ],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-
-                    // Meta Overlays
-                    if hasGPSData || log.weather != nil {
-                        VStack(spacing: 0) {
-                            Spacer()
-                            metadataOverlay
-                        }
-                    }
-                }
-                .clipShape(RoundedRectangle(cornerRadius: 0))
-
-                // Thumbnail Gallery
-                if log.mediaURLs.count > 1 {
-                    thumbnailGallery
-                }
-            } else {
-                // No photos - show placeholder with gradient
-                ZStack(alignment: .bottom) {
-                    Rectangle()
-                        .fill(
-                            LinearGradient(
-                                colors: [Color.primaryColor.opacity(0.3), Color.primaryColor],
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-                        )
-                        .frame(maxWidth: .infinity)
-                        .frame(height: heroImageHeight)
-                        .overlay {
-                            VStack {
-                                Image(systemName: "leaf.fill")
-                                    .font(.system(size: 64))
-                                    .foregroundColor(.white.opacity(0.5))
-                                Text("No Photos")
-                                    .font(.body(16, weight: .bold))
-                                    .foregroundColor(.white.opacity(0.7))
-                            }
-                        }
-
-                    // Meta Overlays
-                    if hasGPSData || log.weather != nil {
-                        VStack(spacing: 0) {
-                            Spacer()
-                            metadataOverlay
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private var metadataOverlay: some View {
-        VStack(spacing: 12) {
-            // Divider line
-            Rectangle()
-                .fill(Color.white.opacity(0.2))
-                .frame(height: 1)
-
-            // Metadata grid - only GPS and Elevation (unique data not in telemetry)
-            HStack(spacing: 16) {
-                if let lat = log.latitude, let lon = log.longitude {
-                    MetadataItem(
-                        label: "GPS Coordinates",
-                        value: String(format: "%.4f° N, %.4f° W", abs(lat), abs(lon)),
-                        alignment: .leading
-                    )
-                }
-
-                if let altitude = log.altitude {
-                    MetadataItem(
-                        label: "Elevation",
-                        value: String(format: "%.0fm ASL", altitude),
-                        alignment: .trailing
-                    )
-                }
-            }
-        }
-        .padding(16)
-        .background(Color.black.opacity(0.4).background(.ultraThinMaterial))
-    }
-
-    private var thumbnailGallery: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                ForEach(Array(log.mediaURLs.enumerated()), id: \.offset) { index, url in
-                    Button(action: {
-                        selectedPhotoIndex = index
-                    }) {
-                        AsyncImage(url: url) { phase in
-                            switch phase {
-                            case .success(let image):
-                                image
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fill)
-                                    .frame(width: 72, height: 72)
-                                    .clipped()
-                                    .cornerRadius(8)
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 8)
-                                            .stroke(selectedPhotoIndex == index ? Color.primaryColor : Color.clear, lineWidth: 2)
-                                    )
-                            default:
-                                Rectangle()
-                                    .fill(Color.surfaceContainerHigh)
-                                    .frame(width: 72, height: 72)
-                                    .cornerRadius(8)
-                            }
-                        }
-                    }
-                }
-
-                // Add Photo placeholder
-                Button(action: {
-                    showingEditView = true
-                }) {
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(Color.surfaceContainer)
-                        .frame(width: 72, height: 72)
-                        .overlay {
-                            Image(systemName: "plus.circle.fill")
-                                .font(.system(size: 24))
-                                .foregroundColor(.onSurfaceVariant)
-                        }
-                }
-            }
-            .padding(.horizontal, 16)
         }
     }
 
@@ -569,26 +402,7 @@ struct LogDetailView: View {
 }
 
 // MARK: - Supporting Views
-
-struct MetadataItem: View {
-    let label: String
-    let value: String
-    let alignment: HorizontalAlignment
-
-    var body: some View {
-        VStack(alignment: alignment, spacing: 2) {
-            Text(label.uppercased())
-                .font(.label(8, weight: .bold))
-                .foregroundColor(.white.opacity(0.6))
-                .tracking(1.2)
-
-            Text(value)
-                .font(.body(13, weight: .regular))
-                .foregroundColor(.white)
-        }
-        .frame(maxWidth: .infinity, alignment: alignment == .leading ? .leading : .trailing)
-    }
-}
+// MetadataItem moved to HeroPhotoSection.swift for reusability
 
 struct TelemetryCard: View {
     let icon: String

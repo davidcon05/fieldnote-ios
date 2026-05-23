@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UIKit
 import CoreLocation
 import SwiftData
 
@@ -38,6 +39,14 @@ struct EditLogView: View {
     @State private var isRefreshingGPS = false
     @State private var isRefreshingWeather = false
     @State private var weatherRefreshError: String?
+    @State private var selectedPhotoIndex: Int = 0
+    @State private var showingPhotoSource = false
+    @State private var showingCamera = false
+    @State private var showingPhotoPicker = false
+    @State private var capturedImage: UIImage?
+    @State private var selectedImages: [UIImage] = []
+
+    private let photoStorage = PhotoStorageService.shared
 
     init(log: Log, journal: Journal) {
         self.log = log
@@ -60,62 +69,84 @@ struct EditLogView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 32) {
-                // Session Header
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Edit Entry")
-                        .font(.label(10, weight: .bold))
-                        .foregroundColor(.tertiary)
-                        .tracking(1.5)
-
-                    Text("EDIT LOG ENTRY")
-                        .font(.display(24, weight: .black))
-                        .foregroundColor(.onBackground)
-                        .tracking(-0.5)
+            VStack(spacing: 0) {
+                // Hero Photo Section (when photos exist)
+                if !editedPhotoURLs.isEmpty {
+                    HeroPhotoSection(
+                        photoURLs: editedPhotoURLs,
+                        selectedPhotoIndex: selectedPhotoIndex,
+                        location: currentLocation,
+                        altitude: editedAltitude,
+                        mode: .editable,
+                        showGradientOverlay: false,
+                        showMetadata: false,
+                        onPhotoSelect: { index in
+                            selectedPhotoIndex = index
+                        },
+                        onAddPhoto: {
+                            showingPhotoSource = true
+                        }
+                    )
                 }
 
-                // Title Editor (Required)
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("TITLE (REQUIRED)")
-                        .font(.label(10, weight: .bold))
-                        .foregroundColor(.tertiary)
-                        .tracking(1.5)
+                VStack(alignment: .leading, spacing: 32) {
+                    // Session Header
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Edit Entry")
+                            .font(.label(10, weight: .bold))
+                            .foregroundColor(.tertiary)
+                            .tracking(1.5)
 
-                    TextField("Enter log title...", text: $editedTitle)
-                        .font(.body(16, weight: .semibold))
-                        .textFieldStyle(.plain)
-                        .padding(16)
-                        .background(Color.white)
-                        .cornerRadius(12)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(editedTitle.isEmpty ? Color.error.opacity(0.5) : Color.outlineVariant, lineWidth: 1)
-                        )
-                }
+                        Text("EDIT LOG ENTRY")
+                            .font(.display(24, weight: .black))
+                            .foregroundColor(.onBackground)
+                            .tracking(-0.5)
+                    }
 
-                // Timestamp Editor
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("TIMESTAMP")
-                        .font(.label(10, weight: .bold))
-                        .foregroundColor(.tertiary)
-                        .tracking(1.5)
+                    // Title Editor (Required)
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("TITLE (REQUIRED)")
+                            .font(.label(10, weight: .bold))
+                            .foregroundColor(.tertiary)
+                            .tracking(1.5)
 
-                    DatePicker("", selection: $editedTimestamp, displayedComponents: [.date, .hourAndMinute])
-                        .datePickerStyle(.compact)
-                        .labelsHidden()
-                        .padding(16)
-                        .background(Color.white)
-                        .cornerRadius(12)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(Color.outlineVariant, lineWidth: 1)
-                        )
-                }
+                        TextField("Enter log title...", text: $editedTitle)
+                            .font(.body(16, weight: .semibold))
+                            .textFieldStyle(.plain)
+                            .padding(16)
+                            .background(Color.white)
+                            .cornerRadius(12)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(editedTitle.isEmpty ? Color.error.opacity(0.5) : Color.outlineVariant, lineWidth: 1)
+                            )
+                    }
 
-                // Bento Grid Layout
-                VStack(spacing: 16) {
-                    // Row 1: Photo Gallery
-                    PhotoGalleryView(photoURLs: $editedPhotoURLs)
+                    // Timestamp Editor
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("TIMESTAMP")
+                            .font(.label(10, weight: .bold))
+                            .foregroundColor(.tertiary)
+                            .tracking(1.5)
+
+                        DatePicker("", selection: $editedTimestamp, displayedComponents: [.date, .hourAndMinute])
+                            .datePickerStyle(.compact)
+                            .labelsHidden()
+                            .padding(16)
+                            .background(Color.white)
+                            .cornerRadius(12)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(Color.outlineVariant, lineWidth: 1)
+                            )
+                    }
+
+                    // Bento Grid Layout
+                    VStack(spacing: 16) {
+                        // Row 1: Photo Gallery (only show when no photos - for adding first photo)
+                        if editedPhotoURLs.isEmpty {
+                            PhotoGalleryView(photoURLs: $editedPhotoURLs)
+                        }
 
                     // Row 2: Audio Memos
                     MultiAudioMemoView(audioMemos: audioMemosBinding)
@@ -150,64 +181,65 @@ struct EditLogView: View {
                                 .padding(.horizontal, 16)
                         }
                     }
-                }
+                    }
 
-                // Field Notes Section (Optional)
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("FIELD NOTES (OPTIONAL)")
-                        .font(.label(10, weight: .bold))
-                        .foregroundColor(.tertiary)
-                        .tracking(1.5)
+                    // Field Notes Section (Optional)
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("FIELD NOTES (OPTIONAL)")
+                            .font(.label(10, weight: .bold))
+                            .foregroundColor(.tertiary)
+                            .tracking(1.5)
 
-                    TextField("Enter your observations...", text: $editedNotes, axis: .vertical)
-                        .font(.body(15))
-                        .lineLimit(6...10)
-                        .textFieldStyle(.plain)
-                        .padding(16)
-                        .background(Color.white)
+                        TextField("Enter your observations...", text: $editedNotes, axis: .vertical)
+                            .font(.body(15))
+                            .lineLimit(6...10)
+                            .textFieldStyle(.plain)
+                            .padding(16)
+                            .background(Color.white)
+                            .cornerRadius(12)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(Color.outlineVariant, lineWidth: 1)
+                            )
+                    }
+
+                    // Save Changes Button
+                    Button(action: saveChanges) {
+                        HStack(spacing: 12) {
+                            Image(systemName: "checkmark.circle.fill")
+                                .font(.system(size: 20))
+                            Text("Save Changes")
+                                .font(.display(18, weight: .bold))
+                        }
+                        .foregroundColor(.onPrimary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 20)
+                        .background(isValid ? Color.primaryColor : Color.outlineVariant)
                         .cornerRadius(12)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(Color.outlineVariant, lineWidth: 1)
-                        )
-                }
-
-                // Save Changes Button
-                Button(action: saveChanges) {
-                    HStack(spacing: 12) {
-                        Image(systemName: "checkmark.circle.fill")
-                            .font(.system(size: 20))
-                        Text("Save Changes")
-                            .font(.display(18, weight: .bold))
+                        .shadow(color: Color.primaryColor.opacity(isValid ? 0.2 : 0), radius: 8, x: 0, y: 4)
                     }
-                    .foregroundColor(.onPrimary)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 20)
-                    .background(isValid ? Color.primaryColor : Color.outlineVariant)
-                    .cornerRadius(12)
-                    .shadow(color: Color.primaryColor.opacity(isValid ? 0.2 : 0), radius: 8, x: 0, y: 4)
-                }
-                .disabled(!isValid)
-                .scaleEffect(isValid ? 1.0 : 0.98)
-                .animation(.easeInOut(duration: 0.2), value: isValid)
+                    .disabled(!isValid)
+                    .scaleEffect(isValid ? 1.0 : 0.98)
+                    .animation(.easeInOut(duration: 0.2), value: isValid)
 
-                // Delete Log Button
-                Button(action: { showingDeleteConfirmation = true }) {
-                    HStack(spacing: 12) {
-                        Image(systemName: "trash.fill")
-                            .font(.system(size: 18))
-                        Text("Delete Log Entry")
-                            .font(.display(16, weight: .bold))
+                    // Delete Log Button
+                    Button(action: { showingDeleteConfirmation = true }) {
+                        HStack(spacing: 12) {
+                            Image(systemName: "trash.fill")
+                                .font(.system(size: 18))
+                            Text("Delete Log Entry")
+                                .font(.display(16, weight: .bold))
+                        }
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 18)
+                        .background(Color.red)
+                        .cornerRadius(12)
                     }
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 18)
-                    .background(Color.red)
-                    .cornerRadius(12)
                 }
+                .padding(.horizontal, 24)
+                .padding(.vertical, 24)
             }
-            .padding(.horizontal, 24)
-            .padding(.vertical, 24)
         }
         .background(Color.background)
         .navigationTitle("Edit Log")
@@ -239,6 +271,40 @@ struct EditLogView: View {
             .disabled(deleteConfirmationText.trimmingCharacters(in: .whitespaces).uppercased() != "DELETE")
         } message: {
             Text("This will permanently delete this observation. This action cannot be undone.\n\nType DELETE to confirm.")
+        }
+        .confirmationDialog("Add Photo", isPresented: $showingPhotoSource, titleVisibility: .visible) {
+            if UIImagePickerController.isSourceTypeAvailable(.camera) {
+                Button("Take Photo") {
+                    showingCamera = true
+                }
+            }
+            Button("Choose from Library") {
+                showingPhotoPicker = true
+            }
+            Button("Cancel", role: .cancel) {}
+        }
+        .sheet(isPresented: $showingCamera) {
+            CameraPickerRepresentable(
+                selectedImage: $capturedImage,
+                sourceType: .camera
+            )
+            .ignoresSafeArea()
+        }
+        .sheet(isPresented: $showingPhotoPicker) {
+            PhotoPickerRepresentable(selectedImages: $selectedImages)
+                .ignoresSafeArea()
+        }
+        .onChange(of: capturedImage) { _, newImage in
+            if let image = newImage {
+                addPhoto(image)
+                capturedImage = nil
+            }
+        }
+        .onChange(of: selectedImages) { _, newImages in
+            if !newImages.isEmpty {
+                addPhotos(newImages)
+                selectedImages = []
+            }
         }
     }
 
@@ -395,6 +461,19 @@ struct EditLogView: View {
 
         // Dismiss the view
         dismiss()
+    }
+
+    // MARK: - Photo Management
+
+    private func addPhoto(_ image: UIImage) {
+        guard let url = photoStorage.savePhoto(image) else { return }
+        editedPhotoURLs.append(url)
+    }
+
+    private func addPhotos(_ images: [UIImage]) {
+        for image in images {
+            addPhoto(image)
+        }
     }
 }
 

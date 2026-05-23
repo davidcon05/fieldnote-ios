@@ -349,7 +349,7 @@ import SwiftUI
                               themeHeaderView
                           }
                       }
-                  } else if let firstMediaURL = journal.logs.first?.mediaURLs.first {
+                  } else if let firstMediaURL = journal.logs.sorted(by: { $0.timestamp > $1.timestamp }).first?.mediaURLs.first {
                       AsyncImage(url: firstMediaURL) { phase in
                           switch phase {
                           case .success(let image):

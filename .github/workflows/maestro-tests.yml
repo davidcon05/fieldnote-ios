@@ -84,12 +84,16 @@ jobs:
           echo "Simulator status:"
           xcrun simctl list devices | grep Booted
 
+      - name: Install App on Simulator
+        run: |
+          # Install the app on the booted simulator
+          xcrun simctl install "$SIMULATOR_UDID" build/Build/Products/Debug-iphonesimulator/fieldnote.app
+          echo "App installed successfully"
+
       - name: Run Maestro Tests
         run: |
-          # Run Maestro tests with explicit device targeting
+          # Run Maestro tests - it will use the appId from the test files
           maestro test \
-            --device "$SIMULATOR_UDID" \
-            --app build/Build/Products/Debug-iphonesimulator/fieldnote.app \
             --format junit \
             --output maestro-results.xml \
             .maestro/

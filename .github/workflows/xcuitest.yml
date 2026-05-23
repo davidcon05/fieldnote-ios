@@ -25,17 +25,88 @@ jobs:
 
       - name: Run XCUITests
         run: |
+          set -o pipefail
           xcodebuild test \
             -project fieldnote.xcodeproj \
             -scheme fieldnote \
             -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
             -only-testing:fieldnoteUITests \
             -resultBundlePath TestResults.xcresult \
-            -verbose
+            -parallel-testing-enabled NO \
+            2>&1 | tee xcodebuild.log
+
+      - name: Parse test results
+        if: always()
+        id: parse_results
+        run: |
+          echo "Parsing XCUITest results..."
+
+          # Extract test summary
+          SUMMARY=$(xcrun xcresulttool get --format json --path TestResults.xcresult | \
+            jq -r '.metrics |
+              "Tests: \(.testsCount // 0) | Passed: \(.testsPassedCount // 0) | Failed: \(.testsFailedCount // 0) | Skipped: \(.testsSkippedCount // 0)"')
+
+          echo "summary=$SUMMARY" >> $GITHUB_OUTPUT
+
+          # Extract failed tests
+          FAILED_TESTS=$(xcrun xcresulttool get --format json --path TestResults.xcresult | \
+            jq -r '.issues.testFailureSummaries.values[]? |
+              "❌ \(.testCaseName)\n   \(.message)\n"' || echo "No failures")
+
+          # Save to file for comment
+          cat > test_results.md <<EOF
+          ## XCUITest Results
+
+          **Summary:** $SUMMARY
+
+          ### Failed Tests
+          \`\`\`
+          $FAILED_TESTS
+          \`\`\`
+          EOF
+
+          cat test_results.md
+
+      - name: Convert to JUnit XML
+        if: always()
+        run: |
+          # Install trainer
+          gem install trainer
+
+          # Convert xcresult to JUnit XML
+          trainer --path TestResults.xcresult --output_directory ./
+
+      - name: Publish test report
+        if: always()
+        uses: mikepenz/action-junit-report@v4
+        with:
+          report_paths: 'results.junit'
+          include_passed: true
+          detailed_summary: true
+          fail_on_failure: true
+
+      - name: Comment PR with results
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const results = fs.readFileSync('test_results.md', 'utf8');
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: results
+            });
 
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: xcuitest-results
-          path: TestResults.xcresult
+          path: |
+            TestResults.xcresult
+            results.junit
+            test_results.md
+            xcodebuild.log

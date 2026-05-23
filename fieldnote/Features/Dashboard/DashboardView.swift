@@ -75,6 +75,7 @@ import SwiftUI
                                           onTap: { viewModel.requestJournalAccess(journal) },
                                           onSettingsTap: { viewModel.openSettings(for: journal) }
                                       )
+                                      .id("\(journal.id)-\(journal.lastModified.timeIntervalSince1970)")
                                   }
                               }
                               .padding(.horizontal, 24)

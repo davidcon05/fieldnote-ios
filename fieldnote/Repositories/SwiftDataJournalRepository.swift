@@ -16,9 +16,10 @@ final class SwiftDataJournalRepository: JournalRepository {
     }
 
     func fetchAll() throws -> [Journal] {
-        let descriptor = FetchDescriptor<Journal>(
+        var descriptor = FetchDescriptor<Journal>(
             sortBy: [SortDescriptor(\.lastModified, order: .reverse)]
         )
+        descriptor.relationshipKeyPathsForPrefetching = [\.logs]
         return try modelContext.fetch(descriptor)
     }
 

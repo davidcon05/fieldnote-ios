@@ -8,41 +8,9 @@ on:
 jobs:
   test-ios:
     name: Run XCUITests on iOS
-    runs-on: macos-26  # macOS with Xcode 26.x (iOS 26.4+)
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Xcode
-        uses: maxim-lobanov/setup-xcode@v1
-        with:
-          xcode-version: latest-stable
-
-      - name: Pre-boot simulator
-        run: |
-          SIMULATOR="iPhone 17 Pro"
-          echo "Pre-booting simulator: $SIMULATOR"
-          xcrun simctl boot "$SIMULATOR" || true
-          xcrun simctl list | grep Booted
-
-      - name: Run XCUITests
-        run: |
-          set -o pipefail
-          xcodebuild test \
-            -project fieldnote.xcodeproj \
-            -scheme fieldnote \
-            -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
-            -only-testing:fieldnoteUITests \
-            -resultBundlePath TestResults.xcresult \
-            -parallel-testing-enabled NO \
-            2>&1 | tee xcodebuild.log
-
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: xcuitest-results
-          path: |
-            TestResults.xcresult
-            xcodebuild.log
+    uses: ./.github/workflows/build.yml
+    with:
+      test-target: fieldnoteUITests
+      enable-coverage: false
+      simulator: 'iPhone 17 Pro'
+      pre-boot-simulator: true

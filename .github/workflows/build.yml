@@ -1,0 +1,100 @@
+name: Build iOS App
+
+# Reusable workflow for building and testing the iOS app
+# Called by unit-tests.yml and xcuitest.yml to avoid duplication
+
+on:
+  workflow_call:
+    inputs:
+      test-target:
+        description: 'Test target to run (fieldnoteTests or fieldnoteUITests)'
+        required: true
+        type: string
+      enable-coverage:
+        description: 'Enable code coverage'
+        required: false
+        type: boolean
+        default: false
+      simulator:
+        description: 'iOS Simulator to use'
+        required: false
+        type: string
+        default: 'iPhone 17 Pro'
+      pre-boot-simulator:
+        description: 'Pre-boot simulator before running tests (for UI tests)'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  build-and-test:
+    name: Build and Test
+    runs-on: macos-26  # macOS with Xcode 26.x
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Pre-boot simulator
+        if: inputs.pre-boot-simulator
+        run: |
+          SIMULATOR="${{ inputs.simulator }}"
+          echo "Pre-booting simulator: $SIMULATOR"
+          xcrun simctl boot "$SIMULATOR" || true
+          xcrun simctl list | grep Booted
+
+      - name: Build and run tests
+        run: |
+          set -o pipefail
+
+          # Build xcodebuild command
+          CMD="xcodebuild test \
+            -project fieldnote.xcodeproj \
+            -scheme fieldnote \
+            -destination 'platform=iOS Simulator,name=${{ inputs.simulator }}' \
+            -only-testing:${{ inputs.test-target }} \
+            -resultBundlePath TestResults.xcresult"
+
+          # Add code coverage if enabled
+          if [ "${{ inputs.enable-coverage }}" = "true" ]; then
+            CMD="$CMD -enableCodeCoverage YES"
+          fi
+
+          # Add parallel testing flag for UI tests
+          if [ "${{ inputs.test-target }}" = "fieldnoteUITests" ]; then
+            CMD="$CMD -parallel-testing-enabled NO"
+          fi
+
+          # Execute
+          echo "Running: $CMD"
+          eval "$CMD" 2>&1 | tee xcodebuild.log
+
+      - name: Generate code coverage report
+        if: inputs.enable-coverage && always()
+        run: |
+          xcrun xccov view --report --json TestResults.xcresult > coverage.json || true
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.test-target }}-results
+          path: |
+            TestResults.xcresult
+            xcodebuild.log
+            coverage.json
+
+      - name: Check test results
+        if: always()
+        run: |
+          if grep -q "Test Suite.*failed" xcodebuild.log; then
+            echo "❌ Tests failed"
+            exit 1
+          else
+            echo "✅ All tests passed"
+          fi

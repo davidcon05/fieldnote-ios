@@ -395,6 +395,7 @@ import SwiftUI
                               themeHeaderView
                           }
                       }
+                      .id("\(firstMediaURL.absoluteString)-\(journal.lastModified.timeIntervalSince1970)")
                   } else {
                       themeHeaderView
                   }

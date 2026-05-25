@@ -490,14 +490,16 @@ struct EditLogView: View {
         guard index < editedPhotoURLs.count else { return }
         let url = editedPhotoURLs[index]
 
-        // Pre-adjust selected index BEFORE removing to prevent out-of-bounds
-        if selectedPhotoIndex >= editedPhotoURLs.count - 1 {
-            selectedPhotoIndex = max(0, editedPhotoURLs.count - 2)
-        }
-
         // Remove from array with animation for smooth transition
         withAnimation {
             editedPhotoURLs.remove(at: index)
+        }
+
+        // Adjust selected index after removal to prevent out-of-bounds
+        if editedPhotoURLs.isEmpty {
+            selectedPhotoIndex = 0
+        } else if selectedPhotoIndex >= editedPhotoURLs.count {
+            selectedPhotoIndex = editedPhotoURLs.count - 1
         }
 
         // Delete file from disk

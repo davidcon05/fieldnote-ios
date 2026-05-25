@@ -3,13 +3,7 @@ name: XCUITest
 on:
   workflow_dispatch:  # Manual trigger
   schedule:
-    - cron: '0 2 * * 5,6,0'  # Run at 2 AM UTC on Friday, Saturday, Sunday
-  push:
-    branches: [ main ]
-    paths:
-      - 'fieldnote/**'
-      - 'fieldnoteUITests/**'
-      - '.github/workflows/xcuitest.yml'
+    - cron: '0 2 * * 5,6,0'  # Run at 2 AM UTC on Friday, Saturday, Sunday (weekends only)
 
 jobs:
   test-ios:

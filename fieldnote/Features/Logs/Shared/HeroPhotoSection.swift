@@ -78,6 +78,7 @@ struct HeroPhotoSection: View {
                                 .frame(maxWidth: .infinity)
                                 .frame(height: heroImageHeight)
                                 .clipped()
+                                .padding(.horizontal, 16)
                         case .failure:
                             Rectangle()
                                 .fill(Color.surfaceContainerHigh)

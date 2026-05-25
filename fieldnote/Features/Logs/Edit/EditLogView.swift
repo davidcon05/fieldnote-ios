@@ -457,6 +457,9 @@ struct EditLogView: View {
         log.longitude = editedLongitude
         log.altitude = editedAltitude
 
+        // Update parent journal's lastModified to trigger dashboard cascade updates
+        journal.touch()
+
         dismiss()
     }
 
@@ -487,16 +490,18 @@ struct EditLogView: View {
         guard index < editedPhotoURLs.count else { return }
         let url = editedPhotoURLs[index]
 
-        // Remove from array
-        editedPhotoURLs.remove(at: index)
+        // Pre-adjust selected index BEFORE removing to prevent out-of-bounds
+        if selectedPhotoIndex >= editedPhotoURLs.count - 1 {
+            selectedPhotoIndex = max(0, editedPhotoURLs.count - 2)
+        }
+
+        // Remove from array with animation for smooth transition
+        withAnimation {
+            editedPhotoURLs.remove(at: index)
+        }
 
         // Delete file from disk
         photoStorage.deletePhoto(at: url)
-
-        // Adjust selected index if needed
-        if selectedPhotoIndex >= editedPhotoURLs.count {
-            selectedPhotoIndex = max(0, editedPhotoURLs.count - 1)
-        }
     }
 }
 

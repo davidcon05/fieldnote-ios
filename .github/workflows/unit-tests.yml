@@ -2,10 +2,9 @@ name: Unit Tests
 
 on:
   workflow_dispatch:  # Manual trigger
-  push:
-    branches: [ main, develop ]
   pull_request:
     branches: [ main, develop ]
+  # Push trigger removed - pre-push hook handles local validation
 
 jobs:
   test:

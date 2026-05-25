@@ -181,7 +181,7 @@ struct DashboardView: View {
                       onTap: { viewModel.requestJournalAccess(journal) },
                       onSettingsTap: { viewModel.openSettings(for: journal) }
                   )
-                  .id("\(journal.id)-\(journal.lastModified.timeIntervalSince1970)")
+                  .id(journal.lastModified)
                   .accessibilityIdentifier(DashboardAccessibilityIdentifiers.journalCard(journal.id.uuidString))
               }
           }
@@ -310,23 +310,11 @@ struct DashboardView: View {
               // PRIVACY: Always show theme for password-protected journals
               themeGradientView
           } else if let coverURL = journal.coverPhotoURL {
-              // Custom cover photo
-              AsyncImage(url: coverURL) { image in
-                  image
-                      .resizable()
-              } placeholder: {
-                  themeGradientView
-              }
-              .id("\(coverURL.absoluteString)-\(journal.id.uuidString)-\(journal.lastModified.timeIntervalSince1970)")
+              // Custom cover photo - use direct Image loading for local files to avoid cache issues
+              LocalImageView(url: coverURL, placeholder: themeGradientView)
           } else if let firstMediaURL = journal.logs.sorted(by: { $0.timestamp > $1.timestamp }).first?.mediaURLs.first {
               // First log's photo (sorted by timestamp to get most recent)
-              AsyncImage(url: firstMediaURL) { image in
-                  image
-                      .resizable()
-              } placeholder: {
-                  themeGradientView
-              }
-              .id("\(firstMediaURL.absoluteString)-\(journal.id.uuidString)-\(journal.lastModified.timeIntervalSince1970)")
+              LocalImageView(url: firstMediaURL, placeholder: themeGradientView)
           } else {
               // Empty journal fallback
               themeGradientView
@@ -372,37 +360,11 @@ struct DashboardView: View {
                   if journal.isPasswordProtected {
                       themeHeaderView
                   } else if let coverURL = journal.coverPhotoURL {
-                      AsyncImage(url: coverURL) { phase in
-                          switch phase {
-                          case .success(let image):
-                              image
-                                  .resizable()
-                                  .scaledToFill()
-                                  .frame(height: 140)
-                                  .clipped()
-                          case .failure(_), .empty:
-                              themeHeaderView
-                          @unknown default:
-                              themeHeaderView
-                          }
-                      }
-                      .id("\(coverURL.absoluteString)-\(journal.lastModified.timeIntervalSince1970)")
+                      LocalImageView(url: coverURL, placeholder: themeHeaderView)
+                          .frame(height: 140)
                   } else if let firstMediaURL = journal.logs.sorted(by: { $0.timestamp > $1.timestamp }).first?.mediaURLs.first {
-                      AsyncImage(url: firstMediaURL) { phase in
-                          switch phase {
-                          case .success(let image):
-                              image
-                                  .resizable()
-                                  .scaledToFill()
-                                  .frame(height: 140)
-                                  .clipped()
-                          case .failure(_), .empty:
-                              themeHeaderView
-                          @unknown default:
-                              themeHeaderView
-                          }
-                      }
-                      .id("\(firstMediaURL.absoluteString)-\(journal.id.uuidString)-\(journal.lastModified.timeIntervalSince1970)")
+                      LocalImageView(url: firstMediaURL, placeholder: themeHeaderView)
+                          .frame(height: 140)
                   } else {
                       themeHeaderView
                   }

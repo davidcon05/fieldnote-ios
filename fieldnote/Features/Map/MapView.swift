@@ -45,74 +45,96 @@ struct MapView: View {
 
     var body: some View {
         ZStack {
-            if logsWithGPS.isEmpty {
-                // Empty State
-                emptyStateView
-            } else {
-                // Map with Pins
-                Map(position: $position) {
-                    ForEach(logsWithGPS) { log in
-                        if let lat = log.latitude, let lon = log.longitude {
-                            Annotation("", coordinate: CLLocationCoordinate2D(latitude: lat, longitude: lon)) {
-                                pinView(for: log, isSelected: selectedLog?.id == log.id)
-                                    .onTapGesture {
-                                        withAnimation(.spring(response: 0.3)) {
-                                            // Toggle: tap again to dismiss
-                                            if selectedLog?.id == log.id {
-                                                selectedLog = nil
-                                            } else {
-                                                selectedLog = log
-                                            }
-                                        }
+            mainContent
+            overlayElements
+        }
+    }
+
+    // MARK: - Main Content
+
+    @ViewBuilder
+    private var mainContent: some View {
+        if logsWithGPS.isEmpty {
+            emptyStateView
+        } else {
+            mapWithPins
+        }
+    }
+
+    private var mapWithPins: some View {
+        Map(position: $position) {
+            ForEach(logsWithGPS) { log in
+                if let lat = log.latitude, let lon = log.longitude {
+                    Annotation("", coordinate: CLLocationCoordinate2D(latitude: lat, longitude: lon)) {
+                        pinView(for: log, isSelected: selectedLog?.id == log.id)
+                            .onTapGesture {
+                                withAnimation(.spring(response: 0.3)) {
+                                    if selectedLog?.id == log.id {
+                                        selectedLog = nil
+                                    } else {
+                                        selectedLog = log
                                     }
+                                }
                             }
-                        }
                     }
                 }
-                .mapStyle(.hybrid)
-                .onAppear {
-                    if !logsWithGPS.isEmpty {
-                        centerMapOnLogs()
-                    }
-                }
+            }
+        }
+        .mapStyle(.hybrid)
+        .accessibilityIdentifier(MapAccessibilityIdentifiers.mapView)
+        .onAppear {
+            if !logsWithGPS.isEmpty {
+                centerMapOnLogs()
+            }
+        }
+    }
 
-                // Live Metrics Panel (Top-Right) - Max 1/3 screen width
-                VStack {
-                    HStack {
-                        Spacer()
-                        liveMetricsPanel
-                            .frame(maxWidth: UIScreen.main.bounds.width / 3)
-                    }
-                    Spacer()
-                }
-                .padding(16)
+    @ViewBuilder
+    private var overlayElements: some View {
+        if !logsWithGPS.isEmpty {
+            metricsPanel
+            locationButton
+            calloutPopup
+        }
+    }
 
-                // Center Location Button (Bottom-Right)
-                VStack {
-                    Spacer()
-                    HStack {
-                        Spacer()
-                        centerLocationButton
-                    }
-                }
-                .padding(16)
+    private var metricsPanel: some View {
+        VStack {
+            HStack {
+                Spacer()
+                liveMetricsPanel
+                    .frame(maxWidth: UIScreen.main.bounds.width / 3)
+            }
+            Spacer()
+        }
+        .padding(16)
+    }
 
-                // Custom Callout Popup
-                if let selectedLog = selectedLog {
-                    VStack(spacing: 0) {
-                        Spacer()
+    private var locationButton: some View {
+        VStack {
+            Spacer()
+            HStack {
+                Spacer()
+                centerLocationButton
+            }
+        }
+        .padding(16)
+    }
 
-                        // Connection line from pin to callout
-                        Rectangle()
-                            .fill(Color.orange.opacity(0.4))
-                            .frame(width: 2, height: 60)
+    @ViewBuilder
+    private var calloutPopup: some View {
+        if let selectedLog = selectedLog {
+            VStack(spacing: 0) {
+                Spacer()
 
-                        logCalloutCard(for: selectedLog)
-                            .padding(.horizontal, 32)
-                            .padding(.bottom, 40)
-                            .transition(.move(edge: .bottom).combined(with: .opacity))
-                    }
-                }
+                Rectangle()
+                    .fill(Color.orange.opacity(0.4))
+                    .frame(width: 2, height: 60)
+
+                logCalloutCard(for: selectedLog)
+                    .padding(.horizontal, 32)
+                    .padding(.bottom, 40)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
     }
@@ -160,6 +182,7 @@ struct MapView: View {
                 .stroke(Color.outlineVariant.opacity(0.3), lineWidth: 1)
         )
         .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 2)
+        .accessibilityIdentifier(MapAccessibilityIdentifiers.metricsPanel)
         .onTapGesture {
             withAnimation(.spring(response: 0.3)) {
                 isMetricsExpanded.toggle()
@@ -290,6 +313,7 @@ struct MapView: View {
                         .clipShape(Circle())
                         .shadow(color: .black.opacity(0.2), radius: 2, x: 0, y: 1)
                 }
+                .accessibilityIdentifier(MapAccessibilityIdentifiers.calloutCloseButton)
                 .padding(8)
             }
 
@@ -318,6 +342,7 @@ struct MapView: View {
                             .background(Color.primaryColor)
                             .cornerRadius(6)
                     }
+                    .accessibilityIdentifier(MapAccessibilityIdentifiers.calloutDetailsButton)
                 }
             }
             .padding(16)
@@ -330,6 +355,7 @@ struct MapView: View {
                 .stroke(Color.outlineVariant.opacity(0.2), lineWidth: 1)
         )
         .shadow(color: .black.opacity(0.15), radius: 16, x: 0, y: 4)
+        .accessibilityIdentifier(MapAccessibilityIdentifiers.calloutCard)
     }
 
     // MARK: - Center Location Button
@@ -350,6 +376,7 @@ struct MapView: View {
                 )
                 .shadow(color: Color.orange.opacity(0.3), radius: 8, x: 0, y: 4)
         }
+        .accessibilityIdentifier(MapAccessibilityIdentifiers.centerLocationButton)
     }
 
     // MARK: - Empty State
@@ -362,17 +389,20 @@ struct MapView: View {
                 Image(systemName: "map")
                     .font(.system(size: 60))
                     .foregroundColor(.tertiaryColor)
+                    .accessibilityIdentifier(MapAccessibilityIdentifiers.emptyStateIcon)
 
                 VStack(spacing: 8) {
                     Text("No GPS Data")
                         .font(.headline(20, weight: .bold))
                         .foregroundColor(.onSurface)
+                        .accessibilityIdentifier(MapAccessibilityIdentifiers.emptyStateTitle)
 
                     Text("Logs with GPS coordinates will appear here")
                         .font(.body(15))
                         .foregroundColor(.onSurfaceVariant)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 40)
+                        .accessibilityIdentifier(MapAccessibilityIdentifiers.emptyStateMessage)
                 }
             }
 

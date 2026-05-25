@@ -69,235 +69,46 @@ struct EditLogView: View {
         ZStack(alignment: .bottom) {
             ScrollView {
                 VStack(spacing: 0) {
-                // Hero Photo Section (when photos exist)
-                if !editedPhotoURLs.isEmpty {
-                    HeroPhotoSection(
-                        photoURLs: editedPhotoURLs,
-                        selectedPhotoIndex: min(selectedPhotoIndex, editedPhotoURLs.count - 1),
-                        location: currentLocation,
-                        altitude: editedAltitude,
-                        mode: .editable,
-                        showGradientOverlay: false,
-                        showMetadata: false,
-                        onPhotoSelect: { index in
-                            selectedPhotoIndex = index
-                        },
-                        onAddPhoto: {
-                            showingPhotoSource = true
-                        },
-                        onDeletePhoto: { index in
-                            deletePhoto(at: index)
-                        }
-                    )
-                }
-
-                VStack(alignment: .leading, spacing: 32) {
-                    // Session Header with timestamp
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Edit Entry")
-                            .font(.label(10, weight: .bold))
-                            .foregroundColor(.tertiary)
-                            .tracking(1.5)
-
-                        Text("EDIT LOG ENTRY")
-                            .font(.display(24, weight: .black))
-                            .foregroundColor(.onBackground)
-                            .tracking(-0.5)
-
-                        Text("Created: \(log.timestamp.formatted(date: .abbreviated, time: .shortened))")
-                            .font(.body(14))
-                            .foregroundColor(.onSurfaceVariant)
-                            .padding(.top, 4)
-                    }
-
-                    // Title Editor (Required)
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("TITLE (REQUIRED)")
-                            .font(.label(10, weight: .bold))
-                            .foregroundColor(.tertiary)
-                            .tracking(1.5)
-
-                        TextField("Enter log title...", text: $editedTitle)
-                            .font(.body(16, weight: .semibold))
-                            .textFieldStyle(.plain)
-                            .padding(16)
-                            .background(Color.white)
-                            .cornerRadius(12)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .stroke(editedTitle.isEmpty ? Color.error.opacity(0.5) : Color.outlineVariant, lineWidth: 1)
-                            )
-                    }
-
-                    // Bento Grid Layout
-                    VStack(spacing: 16) {
-                        // Row 1: Photo Gallery (only show when no photos - for adding first photo)
-                        if editedPhotoURLs.isEmpty {
-                            PhotoGalleryView(photoURLs: $editedPhotoURLs)
-                        }
-
-                    // Row 2: Audio Memos
-                    MultiAudioMemoView(audioMemos: audioMemosBinding)
-                    }
-
-                    // Field Notes Section (Optional)
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("FIELD NOTES (OPTIONAL)")
-                            .font(.label(10, weight: .bold))
-                            .foregroundColor(.tertiary)
-                            .tracking(1.5)
-
-                        TextField("Enter your observations...", text: $editedNotes, axis: .vertical)
-                            .font(.body(15))
-                            .lineLimit(6...10)
-                            .textFieldStyle(.plain)
-                            .padding(16)
-                            .background(Color.white)
-                            .cornerRadius(12)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .stroke(Color.outlineVariant, lineWidth: 1)
-                            )
-                    }
-
-                    // Telemetry Section
-                    VStack(spacing: 16) {
-                        // GPS Telemetry
-                        GPSTelemetryCard(
-                            location: currentLocation,
-                            isLoading: isRefreshingGPS,
-                            error: nil,
-                            onRefresh: {
-                                showingGPSRefreshAlert = true
-                            }
-                        )
-
-                        // Weather Data (Read-only with refresh option)
-                        VStack(alignment: .leading, spacing: 8) {
-                            WeatherDataCard(
-                                weather: log.weather,
-                                location: currentLocation,
-                                isLoading: isRefreshingWeather,
-                                error: weatherRefreshError,
-                                onRefresh: {
-                                    showingWeatherRefreshAlert = true
-                                }
-                            )
-
-                            if log.weather != nil {
-                                Text("CAPTURED AT \(log.timestamp.formatted(date: .abbreviated, time: .shortened))")
-                                    .font(.label(10, weight: .bold))
-                                    .foregroundColor(.tertiary)
-                                    .tracking(1.5)
-                                    .padding(.horizontal, 16)
-                            }
-                        }
-                    }
+                    heroSection
+                    formContent
                 }
                 .padding(.horizontal, 24)
                 .padding(.top, 24)
-                .padding(.bottom, 180) // Extra space for fixed bottom buttons
-            }
+                .padding(.bottom, 180)
             }
             .background(Color.background)
 
-            // Fixed Bottom Buttons
-            VStack(spacing: 0) {
-                // Gradient fade at top of button bar
-                LinearGradient(
-                    colors: [Color.background.opacity(0), Color.background],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                .frame(height: 20)
-
-                VStack(spacing: 12) {
-                    // Save Changes Button
-                    Button(action: saveChanges) {
-                        HStack(spacing: 12) {
-                            Image(systemName: "checkmark.circle.fill")
-                                .font(.system(size: 20))
-                            Text("Save Changes")
-                                .font(.display(18, weight: .bold))
-                        }
-                        .foregroundColor(.onPrimary)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 20)
-                        .background(isValid ? Color.primaryColor : Color.outlineVariant)
-                        .cornerRadius(12)
-                        .shadow(color: Color.primaryColor.opacity(isValid ? 0.2 : 0), radius: 8, x: 0, y: 4)
-                    }
-                    .disabled(!isValid)
-                    .scaleEffect(isValid ? 1.0 : 0.98)
-                    .animation(.easeInOut(duration: 0.2), value: isValid)
-
-                    // Delete Log Button
-                    Button(action: { showingDeleteConfirmation = true }) {
-                        HStack(spacing: 12) {
-                            Image(systemName: "trash.fill")
-                                .font(.system(size: 18))
-                            Text("Delete Log Entry")
-                                .font(.display(16, weight: .bold))
-                        }
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 18)
-                        .background(Color.red)
-                        .cornerRadius(12)
-                    }
-                }
-                .padding(.horizontal, 24)
-                .padding(.bottom, 24)
-                .background(Color.background)
-            }
+            actionButtons
         }
         .navigationTitle("Edit Log")
         .navigationBarTitleDisplayMode(.inline)
         .alert("Refresh Weather Data?", isPresented: $showingWeatherRefreshAlert) {
             Button("Cancel", role: .cancel) { }
-            Button("Refresh") {
-                refreshWeatherData()
-            }
+            Button("Refresh") { refreshWeatherData() }
         } message: {
             Text("This will replace weather from \(log.timestamp.formatted(date: .abbreviated, time: .shortened)) with current conditions at this location.")
         }
         .alert("Refresh GPS Coordinates?", isPresented: $showingGPSRefreshAlert) {
             Button("Cancel", role: .cancel) { }
-            Button("Refresh") {
-                refreshGPSCoordinates()
-            }
+            Button("Refresh") { refreshGPSCoordinates() }
         } message: {
             Text("This will update GPS coordinates with your current location.")
         }
-        .alert("Delete Log Entry", isPresented: $showingDeleteConfirmation) {
-            TextField("Type DELETE to confirm", text: $deleteConfirmationText)
-            Button("Cancel", role: .cancel) {
-                deleteConfirmationText = ""
-            }
-            Button("Delete", role: .destructive) {
-                deleteLog()
-            }
-            .disabled(deleteConfirmationText.trimmingCharacters(in: .whitespaces).uppercased() != "DELETE")
-        } message: {
-            Text("This will permanently delete this observation. This action cannot be undone.\n\nType DELETE to confirm.")
-        }
+        .deleteConfirmationAlert(
+            isPresented: $showingDeleteConfirmation,
+            confirmationText: $deleteConfirmationText,
+            onDelete: deleteLog
+        )
         .confirmationDialog("Add Photo", isPresented: $showingPhotoSource, titleVisibility: .visible) {
             if UIImagePickerController.isSourceTypeAvailable(.camera) {
-                Button("Take Photo") {
-                    showingCamera = true
-                }
+                Button("Take Photo") { showingCamera = true }
             }
-            Button("Choose from Library") {
-                showingPhotoPicker = true
-            }
+            Button("Choose from Library") { showingPhotoPicker = true }
             Button("Cancel", role: .cancel) {}
         }
         .sheet(isPresented: $showingCamera) {
-            CameraPickerRepresentable(
-                selectedImage: $capturedImage,
-                sourceType: .camera
-            )
-            .ignoresSafeArea()
+            CameraPickerRepresentable(selectedImage: $capturedImage, sourceType: .camera)
+                .ignoresSafeArea()
         }
         .sheet(isPresented: $showingPhotoPicker) {
             PhotoPickerRepresentable(selectedImages: $selectedImages)
@@ -313,6 +124,194 @@ struct EditLogView: View {
             if !newImages.isEmpty {
                 addPhotos(newImages)
                 selectedImages = []
+            }
+        }
+    }
+
+    // MARK: - Main Sections
+
+    @ViewBuilder
+    private var heroSection: some View {
+        if !editedPhotoURLs.isEmpty {
+            HeroPhotoSection(
+                photoURLs: editedPhotoURLs,
+                selectedPhotoIndex: min(selectedPhotoIndex, editedPhotoURLs.count - 1),
+                location: currentLocation,
+                altitude: editedAltitude,
+                mode: .editable,
+                showGradientOverlay: false,
+                showMetadata: false,
+                onPhotoSelect: { index in
+                    selectedPhotoIndex = index
+                },
+                onAddPhoto: {
+                    showingPhotoSource = true
+                },
+                onDeletePhoto: { index in
+                    deletePhoto(at: index)
+                }
+            )
+        }
+    }
+
+    private var formContent: some View {
+        VStack(alignment: .leading, spacing: 32) {
+            sessionHeader
+            titleField
+            bentoGrid
+            fieldNotesSection
+            telemetrySection
+        }
+    }
+
+    private var actionButtons: some View {
+        VStack(spacing: 0) {
+            LinearGradient(
+                colors: [Color.background.opacity(0), Color.background],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .frame(height: 20)
+
+            VStack(spacing: 12) {
+                Button(action: saveChanges) {
+                    HStack(spacing: 12) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 20))
+                        Text("Save Changes")
+                            .font(.display(18, weight: .bold))
+                    }
+                    .foregroundColor(.onPrimary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 20)
+                    .background(isValid ? Color.primaryColor : Color.outlineVariant)
+                    .cornerRadius(12)
+                    .shadow(color: Color.primaryColor.opacity(isValid ? 0.2 : 0), radius: 8, x: 0, y: 4)
+                }
+                .disabled(!isValid)
+                .scaleEffect(isValid ? 1.0 : 0.98)
+                .animation(.easeInOut(duration: 0.2), value: isValid)
+
+                Button(action: { showingDeleteConfirmation = true }) {
+                    HStack(spacing: 12) {
+                        Image(systemName: "trash.fill")
+                            .font(.system(size: 18))
+                        Text("Delete Log Entry")
+                            .font(.display(16, weight: .bold))
+                    }
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 18)
+                    .background(Color.red)
+                    .cornerRadius(12)
+                }
+            }
+            .padding(.horizontal, 24)
+            .padding(.bottom, 24)
+            .background(Color.background)
+        }
+    }
+
+    // MARK: - Form Sections
+
+    private var sessionHeader: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("Edit Entry")
+                .font(.label(10, weight: .bold))
+                .foregroundColor(.tertiary)
+                .tracking(1.5)
+
+            Text("EDIT LOG ENTRY")
+                .font(.display(24, weight: .black))
+                .foregroundColor(.onBackground)
+                .tracking(-0.5)
+
+            Text("Created: \(log.timestamp.formatted(date: .abbreviated, time: .shortened))")
+                .font(.body(14))
+                .foregroundColor(.onSurfaceVariant)
+                .padding(.top, 4)
+        }
+    }
+
+    private var titleField: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("TITLE (REQUIRED)")
+                .font(.label(10, weight: .bold))
+                .foregroundColor(.tertiary)
+                .tracking(1.5)
+
+            TextField("Enter log title...", text: $editedTitle)
+                .font(.body(16, weight: .semibold))
+                .textFieldStyle(.plain)
+                .padding(16)
+                .background(Color.white)
+                .cornerRadius(12)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(editedTitle.isEmpty ? Color.error.opacity(0.5) : Color.outlineVariant, lineWidth: 1)
+                )
+        }
+    }
+
+    private var bentoGrid: some View {
+        VStack(spacing: 16) {
+            if editedPhotoURLs.isEmpty {
+                PhotoGalleryView(photoURLs: $editedPhotoURLs)
+            }
+            MultiAudioMemoView(audioMemos: audioMemosBinding)
+        }
+    }
+
+    private var fieldNotesSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("FIELD NOTES (OPTIONAL)")
+                .font(.label(10, weight: .bold))
+                .foregroundColor(.tertiary)
+                .tracking(1.5)
+
+            TextField("Enter your observations...", text: $editedNotes, axis: .vertical)
+                .font(.body(15))
+                .lineLimit(6...10)
+                .textFieldStyle(.plain)
+                .padding(16)
+                .background(Color.white)
+                .cornerRadius(12)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(Color.outlineVariant, lineWidth: 1)
+                )
+        }
+    }
+
+    private var telemetrySection: some View {
+        VStack(spacing: 16) {
+            GPSTelemetryCard(
+                location: currentLocation,
+                isLoading: isRefreshingGPS,
+                error: nil,
+                onRefresh: {
+                    showingGPSRefreshAlert = true
+                }
+            )
+
+            VStack(alignment: .leading, spacing: 8) {
+                WeatherDataCard(
+                    weather: log.weather,
+                    location: currentLocation,
+                    isLoading: isRefreshingWeather,
+                    error: weatherRefreshError,
+                    onRefresh: {
+                        showingWeatherRefreshAlert = true
+                    }
+                )
+
+                if log.weather != nil {
+                    Text("CAPTURED AT \(log.timestamp.formatted(date: .abbreviated, time: .shortened))")
+                        .font(.label(10, weight: .bold))
+                        .foregroundColor(.tertiary)
+                        .tracking(1.5)
+                        .padding(.horizontal, 16)
+                }
             }
         }
     }

@@ -1,0 +1,29 @@
+{
+  "configurations" : [
+    {
+      "id" : "ABCD1234-5678-90AB-CDEF-123456789012",
+      "name" : "Configuration 1",
+      "options" : {
+        "maximumTestExecutionTimeAllowance" : 600
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "codeCoverage" : false,
+    "parallelizationEnabled" : false,
+    "testExecutionOrdering" : "alphabetical",
+    "maximumTestRepetitions" : 1,
+    "testRepetitionMode" : "none"
+  },
+  "testTargets" : [
+    {
+      "parallelizable" : false,
+      "target" : {
+        "containerPath" : "container:fieldnote.xcodeproj",
+        "identifier" : "fieldnoteUITests",
+        "name" : "fieldnoteUITests"
+      }
+    }
+  ],
+  "version" : 1
+}

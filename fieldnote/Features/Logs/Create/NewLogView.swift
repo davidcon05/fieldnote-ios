@@ -38,182 +38,27 @@ struct NewLogView: View {
         ZStack(alignment: .bottom) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                // Hero Photo Section (if photos exist)
-                if !viewModel.photoURLs.isEmpty {
-                    HeroPhotoSection(
-                        photoURLs: viewModel.photoURLs,
-                        selectedPhotoIndex: min(viewModel.selectedPhotoIndex, viewModel.photoURLs.count - 1),
-                        location: locationManager.location,
-                        altitude: locationManager.location?.altitude,
-                        mode: .editable,
-                        showGradientOverlay: false,
-                        showMetadata: false,
-                        onPhotoSelect: { index in
-                            viewModel.selectedPhotoIndex = index
-                        },
-                        onAddPhoto: {
-                            viewModel.showingPhotoSource = true
-                        },
-                        onDeletePhoto: { index in
-                            viewModel.deletePhoto(at: index)
-                        }
-                    )
-                }
-
-                VStack(alignment: .leading, spacing: 32) {
-                    // Session Header
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Capture Portal")
-                            .font(.label(10, weight: .bold))
-                            .foregroundColor(.tertiary)
-                            .tracking(1.5)
-
-                        Text("NEW LOG ENTRY")
-                            .font(.display(24, weight: .black))
-                            .foregroundColor(.onBackground)
-                            .tracking(-0.5)
-                    }
-
-                    // Title Field (Required)
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("TITLE (REQUIRED)")
-                            .font(.label(10, weight: .bold))
-                            .foregroundColor(.tertiary)
-                            .tracking(1.5)
-
-                        TextField("Enter log title...", text: $viewModel.title)
-                            .font(.body(16, weight: .semibold))
-                            .textFieldStyle(.plain)
-                            .padding(16)
-                            .background(Color.white)
-                            .cornerRadius(12)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .stroke(viewModel.title.isEmpty ? Color.error.opacity(0.5) : Color.outlineVariant, lineWidth: 1)
-                            )
-                    }
-
-                    // Bento Grid Layout
-                    VStack(spacing: 16) {
-                        // Row 1: Photo Gallery (only show when no photos - for adding first photo)
-                        if viewModel.photoURLs.isEmpty {
-                            PhotoGalleryView(photoURLs: $viewModel.photoURLs)
-                        }
-
-                    // Row 2: Audio Memos
-                    MultiAudioMemoView(audioMemos: $viewModel.audioMemos)
-
-                    // Row 3: GPS Telemetry
-                    GPSTelemetryCard(
-                        location: locationManager.location,
-                        isLoading: locationManager.location == nil && locationManager.locationError == nil,
-                        error: locationManager.locationError,
-                        onRefresh: {
-                            locationManager.startUpdatingLocation()
-                        }
-                    )
-
-                    // Row 3: Weather Data (Wide)
-                    WeatherDataCard(
-                        weather: viewModel.currentWeather,
-                        location: locationManager.location,
-                        isLoading: viewModel.isLoadingWeather,
-                        error: viewModel.weatherError
-                    )
-
-                    // Retry button for weather errors
-                    if viewModel.weatherError != nil && !viewModel.isLoadingWeather {
-                        Button(action: viewModel.retryWeatherFetch) {
-                            HStack {
-                                Image(systemName: "arrow.clockwise")
-                                Text("Retry Weather")
-                            }
-                            .font(.body(14, weight: .medium))
-                            .foregroundColor(.primaryColor)
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 10)
-                            .background(Color.primaryColor.opacity(0.1))
-                            .cornerRadius(8)
-                        }
-                    }
-                }
-
-                // Field Notes Section (Optional)
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("FIELD NOTES (OPTIONAL)")
-                        .font(.label(10, weight: .bold))
-                        .foregroundColor(.tertiary)
-                        .tracking(1.5)
-
-                    TextField("Enter your observations...", text: $viewModel.notes, axis: .vertical)
-                        .font(.body(15))
-                        .lineLimit(6...10)
-                        .textFieldStyle(.plain)
-                        .padding(16)
-                        .background(Color.white)
-                        .cornerRadius(12)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(Color.outlineVariant, lineWidth: 1)
-                        )
-                }
+                    heroSection
+                    formContent
                 }
                 .padding(.horizontal, 24)
                 .padding(.top, 24)
-                .padding(.bottom, 100) // Extra space for fixed bottom button
-            }
+                .padding(.bottom, 100)
             }
             .background(Color.background)
 
-            // Fixed Bottom Button
-            VStack(spacing: 0) {
-                // Gradient fade at top of button bar
-                LinearGradient(
-                    colors: [Color.background.opacity(0), Color.background],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                .frame(height: 20)
-
-                Button(action: viewModel.saveLog) {
-                    HStack(spacing: 12) {
-                        Image(systemName: "checkmark.circle.fill")
-                            .font(.system(size: 20))
-                        Text("Finalize Entry")
-                            .font(.display(18, weight: .bold))
-                    }
-                    .foregroundColor(.onPrimary)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 20)
-                    .background(viewModel.isValid ? Color.primaryColor : Color.outlineVariant)
-                    .cornerRadius(12)
-                    .shadow(color: Color.primaryColor.opacity(viewModel.isValid ? 0.2 : 0), radius: 8, x: 0, y: 4)
-                }
-                .disabled(!viewModel.isValid)
-                .scaleEffect(viewModel.isValid ? 1.0 : 0.98)
-                .animation(.easeInOut(duration: 0.2), value: viewModel.isValid)
-                .padding(.horizontal, 24)
-                .padding(.bottom, 24)
-                .background(Color.background)
-            }
+            saveButton
         }
         .confirmationDialog("Add Photo", isPresented: $viewModel.showingPhotoSource, titleVisibility: .visible) {
             if UIImagePickerController.isSourceTypeAvailable(.camera) {
-                Button("Take Photo") {
-                    viewModel.showingCamera = true
-                }
+                Button("Take Photo") { viewModel.showingCamera = true }
             }
-            Button("Choose from Library") {
-                viewModel.showingPhotoPicker = true
-            }
+            Button("Choose from Library") { viewModel.showingPhotoPicker = true }
             Button("Cancel", role: .cancel) {}
         }
         .sheet(isPresented: $viewModel.showingCamera) {
-            CameraPickerRepresentable(
-                selectedImage: $viewModel.capturedImage,
-                sourceType: .camera
-            )
-            .ignoresSafeArea()
+            CameraPickerRepresentable(selectedImage: $viewModel.capturedImage, sourceType: .camera)
+                .ignoresSafeArea()
         }
         .sheet(isPresented: $viewModel.showingPhotoPicker) {
             PhotoPickerRepresentable(selectedImages: $viewModel.selectedImages)
@@ -233,28 +78,201 @@ struct NewLogView: View {
                 viewModel.selectedImages = []
             }
         }
-        .onAppear {
-            viewModel.startLocationServices()
-        }
-        .onDisappear {
-            viewModel.stopLocationServices()
-        }
-        .onChange(of: locationManager.location) { oldLocation, newLocation in
-            // When location updates, fetch weather
+        .onAppear { viewModel.startLocationServices() }
+        .onDisappear { viewModel.stopLocationServices() }
+        .onChange(of: locationManager.location) { _, newLocation in
             if let location = newLocation {
                 viewModel.fetchWeatherIfNeeded(for: location)
             }
         }
         .alert("Log Saved", isPresented: $viewModel.showingSaveConfirmation) {
-            Button("OK") {
-                viewModel.resetForm()
-            }
+            Button("OK") { viewModel.resetForm() }
         } message: {
             Text("Your field observation has been saved to \(viewModel.journal.name)")
         }
     }
 
+    // MARK: - Main Sections
+
+    @ViewBuilder
+    private var heroSection: some View {
+        if !viewModel.photoURLs.isEmpty {
+            HeroPhotoSection(
+                photoURLs: viewModel.photoURLs,
+                selectedPhotoIndex: min(viewModel.selectedPhotoIndex, viewModel.photoURLs.count - 1),
+                location: locationManager.location,
+                altitude: locationManager.location?.altitude,
+                mode: .editable,
+                showGradientOverlay: false,
+                showMetadata: false,
+                onPhotoSelect: { index in
+                    viewModel.selectedPhotoIndex = index
+                },
+                onAddPhoto: {
+                    viewModel.showingPhotoSource = true
+                },
+                onDeletePhoto: { index in
+                    viewModel.deletePhoto(at: index)
+                }
+            )
+        }
+    }
+
+    private var formContent: some View {
+        VStack(alignment: .leading, spacing: 32) {
+            sessionHeader
+            titleField
+            bentoGrid
+        }
+    }
+
+    private var saveButton: some View {
+        VStack(spacing: 0) {
+            LinearGradient(
+                colors: [Color.background.opacity(0), Color.background],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .frame(height: 20)
+
+            Button(action: viewModel.saveLog) {
+                HStack(spacing: 12) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 20))
+                    Text("Finalize Entry")
+                        .font(.display(18, weight: .bold))
+                }
+                .foregroundColor(.onPrimary)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 20)
+                .background(viewModel.isValid ? Color.primaryColor : Color.outlineVariant)
+                .cornerRadius(12)
+                .shadow(color: Color.primaryColor.opacity(viewModel.isValid ? 0.2 : 0), radius: 8, x: 0, y: 4)
+            }
+            .accessibilityIdentifier(NewLogAccessibilityIdentifiers.finalizeButton)
+            .disabled(!viewModel.isValid)
+            .scaleEffect(viewModel.isValid ? 1.0 : 0.98)
+            .animation(.easeInOut(duration: 0.2), value: viewModel.isValid)
+            .padding(.horizontal, 24)
+            .padding(.bottom, 24)
+            .background(Color.background)
+        }
+    }
+
+    // MARK: - Form Sections
+
+    private var sessionHeader: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("Capture Portal")
+                .font(.label(10, weight: .bold))
+                .foregroundColor(.tertiary)
+                .tracking(1.5)
+
+            Text("NEW LOG ENTRY")
+                .font(.display(24, weight: .black))
+                .foregroundColor(.onBackground)
+                .tracking(-0.5)
+        }
+    }
+
+    private var titleField: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("TITLE (REQUIRED)")
+                .font(.label(10, weight: .bold))
+                .foregroundColor(.tertiary)
+                .tracking(1.5)
+
+            TextField("Enter log title...", text: $viewModel.title)
+                .font(.body(16, weight: .semibold))
+                .textFieldStyle(.plain)
+                .padding(16)
+                .background(Color.white)
+                .cornerRadius(12)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(viewModel.title.isEmpty ? Color.error.opacity(0.5) : Color.outlineVariant, lineWidth: 1)
+                )
+                .accessibilityIdentifier(NewLogAccessibilityIdentifiers.titleField)
+        }
+    }
+
+    private var bentoGrid: some View {
+        VStack(spacing: 16) {
+            if viewModel.photoURLs.isEmpty {
+                PhotoGalleryView(photoURLs: $viewModel.photoURLs)
+            }
+
+            MultiAudioMemoView(audioMemos: $viewModel.audioMemos)
+
+            fieldNotesSection
+
+            GPSTelemetryCard(
+                location: locationManager.location,
+                isLoading: locationManager.location == nil && locationManager.locationError == nil,
+                error: locationManager.locationError,
+                onRefresh: {
+                    locationManager.startUpdatingLocation()
+                }
+            )
+            .accessibilityElement(children: .contain)
+            .accessibilityIdentifier(NewLogAccessibilityIdentifiers.gpsTelemetryCard)
+
+            WeatherDataCard(
+                weather: viewModel.currentWeather,
+                location: locationManager.location,
+                isLoading: viewModel.isLoadingWeather,
+                error: viewModel.weatherError
+            )
+            .accessibilityElement(children: .contain)
+            .accessibilityIdentifier(NewLogAccessibilityIdentifiers.weatherDataCard)
+
+            if viewModel.weatherError != nil && !viewModel.isLoadingWeather {
+                Button(action: viewModel.retryWeatherFetch) {
+                    HStack {
+                        Image(systemName: "arrow.clockwise")
+                        Text("Retry Weather")
+                    }
+                    .font(.body(14, weight: .medium))
+                    .foregroundColor(.primaryColor)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 10)
+                    .background(Color.primaryColor.opacity(0.1))
+                    .cornerRadius(8)
+                }
+                .accessibilityIdentifier(NewLogAccessibilityIdentifiers.weatherRetryButton)
+            }
+        }
+    }
+
+    private var fieldNotesSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("FIELD NOTES (OPTIONAL)")
+                .font(.label(10, weight: .bold))
+                .foregroundColor(.tertiary)
+                .tracking(1.5)
+
+            TextField("Enter your observations...", text: $viewModel.notes, axis: .vertical)
+                .font(.body(15))
+                .lineLimit(6...10)
+                .textFieldStyle(.plain)
+                .padding(16)
+                .background(Color.white)
+                .cornerRadius(12)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(Color.outlineVariant, lineWidth: 1)
+                )
+                .accessibilityIdentifier(NewLogAccessibilityIdentifiers.notesField)
+        }
+    }
 }
+
+// MARK: - View Modifiers
+
+// These view modifiers need to be applied inline since they need Binding access
+// Custom view modifiers don't work well with @Published properties
+
+// MARK: - Previews
 
 #Preview("Initial State") {
     NavigationStack {

@@ -28,94 +28,91 @@ struct LogDetailView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 0) {
-                // Hero Section: Immersive Media Header
-                HeroPhotoSection(
-                    photoURLs: log.mediaURLs,
-                    selectedPhotoIndex: selectedPhotoIndex,
-                    location: hasGPSData ? CLLocation(latitude: log.latitude!, longitude: log.longitude!) : nil,
-                    altitude: log.altitude,
-                    mode: .readOnly,
-                    showGradientOverlay: true,
-                    showMetadata: true,
-                    onPhotoSelect: { index in
-                        selectedPhotoIndex = index
-                    },
-                    onAddPhoto: {
-                        showingEditView = true
-                    }
-                )
-
-                // Content Section
-                VStack(spacing: 32) {
-                    // Title Section
-                    titleSection
-
-                    // Field Notes Section
-                    if !log.notes.isEmpty {
-                        fieldNotesSection
-                    }
-
-                    // Field Observations (Audio Memos)
-                    if !log.audioMemos.isEmpty {
-                        fieldObservationsSection
-                    }
-
-                    // Telemetry Data Grid (Weather)
-                    if log.weather != nil {
-                        telemetryDataSection
-                    }
-
-                    // Location Sync Section
-                    if hasGPSData {
-                        locationSyncSection
-                    }
-
-                    // Action Buttons
-                    actionButtons
-                }
-                .padding(.horizontal, 16)
-                .padding(.bottom, 32)
+                heroSection
+                contentSections
             }
         }
         .background(Color.background)
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .principal) {
-                VStack(spacing: 2) {
-                    Text("Log Details")
-                        .font(.body(16, weight: .bold))
-                        .foregroundColor(.onSurface)
-                    Text(journal.name.uppercased())
-                        .font(.label(9, weight: .bold))
-                        .foregroundColor(.onSurfaceVariant)
-                        .tracking(1.2)
-                }
-            }
-
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button(action: {
-                    showingEditView = true
-                }) {
-                    Image(systemName: "square.and.pencil")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(.primaryColor)
-                }
-            }
-        }
+        .toolbar { toolbarContent }
         .navigationDestination(isPresented: $showingEditView) {
             EditLogView(log: log, journal: journal)
         }
-        .alert("Delete Log Entry", isPresented: $showingDeleteConfirmation) {
-            TextField("Type DELETE to confirm", text: $deleteConfirmationText)
-            Button("Cancel", role: .cancel) {
-                deleteConfirmationText = ""
+        .deleteConfirmationAlert(
+            isPresented: $showingDeleteConfirmation,
+            confirmationText: $deleteConfirmationText,
+            onDelete: deleteLog
+        )
+    }
+
+    // MARK: - Main Sections
+
+    private var heroSection: some View {
+        HeroPhotoSection(
+            photoURLs: log.mediaURLs,
+            selectedPhotoIndex: selectedPhotoIndex,
+            location: hasGPSData ? CLLocation(latitude: log.latitude!, longitude: log.longitude!) : nil,
+            altitude: log.altitude,
+            mode: .readOnly,
+            showGradientOverlay: true,
+            showMetadata: true,
+            onPhotoSelect: { index in
+                selectedPhotoIndex = index
+            },
+            onAddPhoto: {
+                showingEditView = true
             }
-            Button("Delete", role: .destructive) {
-                deleteLog()
+        )
+        .accessibilityIdentifier(LogDetailAccessibilityIdentifiers.heroPhoto)
+    }
+
+    private var contentSections: some View {
+        VStack(spacing: 32) {
+            titleSection
+
+            if !log.notes.isEmpty {
+                fieldNotesSection
             }
-            .disabled(deleteConfirmationText.trimmingCharacters(in: .whitespaces).uppercased() != "DELETE")
-        } message: {
-            Text("This will permanently delete this observation. This action cannot be undone.\n\nType DELETE to confirm.")
+
+            if !log.audioMemos.isEmpty {
+                fieldObservationsSection
+            }
+
+            if log.weather != nil {
+                telemetryDataSection
+            }
+
+            if hasGPSData {
+                locationSyncSection
+            }
+
+            actionButtons
+        }
+        .padding(.horizontal, 16)
+        .padding(.bottom, 32)
+    }
+
+    @ToolbarContentBuilder
+    private var toolbarContent: some ToolbarContent {
+        ToolbarItem(placement: .principal) {
+            VStack(spacing: 2) {
+                Text("Log Details")
+                    .font(.body(16, weight: .bold))
+                    .foregroundColor(.onSurface)
+                Text(journal.name.uppercased())
+                    .font(.label(9, weight: .bold))
+                    .foregroundColor(.onSurfaceVariant)
+                    .tracking(1.2)
+            }
+        }
+
+        ToolbarItem(placement: .navigationBarTrailing) {
+            Button(action: { showingEditView = true }) {
+                Image(systemName: "square.and.pencil")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(.primaryColor)
+            }
+            .accessibilityIdentifier(LogDetailAccessibilityIdentifiers.editButton)
         }
     }
 
@@ -127,11 +124,13 @@ struct LogDetailView: View {
                 .font(.display(28, weight: .black))
                 .foregroundColor(.onBackground)
                 .tracking(-0.5)
-            
+                .accessibilityIdentifier(LogDetailAccessibilityIdentifiers.titleText)
+
             Text(log.timestamp.formatted(date: .abbreviated, time: .shortened).uppercased())
                 .font(.label(12, weight: .bold))
                 .foregroundColor(.primaryColor)
                 .tracking(1.5)
+                .accessibilityIdentifier(LogDetailAccessibilityIdentifiers.timestampText)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.top, 12)
@@ -155,6 +154,7 @@ struct LogDetailView: View {
                     RoundedRectangle(cornerRadius: 12)
                         .stroke(Color.outlineVariant.opacity(0.3), lineWidth: 1)
                 )
+                .accessibilityIdentifier(LogDetailAccessibilityIdentifiers.notesText)
         }
     }
 
@@ -214,6 +214,8 @@ struct LogDetailView: View {
                         )
                     }
                 }
+                .accessibilityElement(children: .contain)
+                .accessibilityIdentifier(LogDetailAccessibilityIdentifiers.weatherDataCard)
             }
         }
     }
@@ -267,6 +269,8 @@ struct LogDetailView: View {
                     .background(Color.surfaceContainer.opacity(0.95))
                     .cornerRadius(8, corners: [.bottomLeft, .bottomRight])
                 }
+                .accessibilityElement(children: .contain)
+                .accessibilityIdentifier(LogDetailAccessibilityIdentifiers.gpsTelemetryCard)
             }
         }
     }
@@ -313,6 +317,7 @@ struct LogDetailView: View {
                 .background(Color.red)
                 .cornerRadius(24)
             }
+            .accessibilityIdentifier(LogDetailAccessibilityIdentifiers.deleteButton)
         }
     }
 
@@ -538,6 +543,44 @@ struct RoundedCorner: Shape {
             cornerRadii: CGSize(width: radius, height: radius)
         )
         return Path(path.cgPath)
+    }
+}
+
+// MARK: - View Modifiers
+
+struct DeleteConfirmationAlert: ViewModifier {
+    @Binding var isPresented: Bool
+    @Binding var confirmationText: String
+    let onDelete: () -> Void
+
+    func body(content: Content) -> some View {
+        content
+            .alert("Delete Log Entry", isPresented: $isPresented) {
+                TextField("Type DELETE to confirm", text: $confirmationText)
+                Button("Cancel", role: .cancel) {
+                    confirmationText = ""
+                }
+                Button("Delete", role: .destructive) {
+                    onDelete()
+                }
+                .disabled(confirmationText.trimmingCharacters(in: .whitespaces).uppercased() != "DELETE")
+            } message: {
+                Text("This will permanently delete this observation. This action cannot be undone.\n\nType DELETE to confirm.")
+            }
+    }
+}
+
+extension View {
+    func deleteConfirmationAlert(
+        isPresented: Binding<Bool>,
+        confirmationText: Binding<String>,
+        onDelete: @escaping () -> Void
+    ) -> some View {
+        modifier(DeleteConfirmationAlert(
+            isPresented: isPresented,
+            confirmationText: confirmationText,
+            onDelete: onDelete
+        ))
     }
 }
 

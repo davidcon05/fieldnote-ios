@@ -16,93 +16,7 @@ struct LogsListView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            if journal.logs.isEmpty {
-                // Empty state
-                Spacer()
-
-                VStack(spacing: 16) {
-                    Image(systemName: "list.bullet.clipboard")
-                        .font(.system(size: 60))
-                        .foregroundColor(.tertiaryColor)
-
-                    VStack(spacing: 8) {
-                        Text("No Logs Yet")
-                            .font(.headline(20, weight: .bold))
-                            .foregroundColor(.onSurface)
-
-                        Text("Tap the New Log tab to create your first field observation")
-                            .font(.body(15))
-                            .foregroundColor(.onSurfaceVariant)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal, 40)
-                    }
-                }
-
-                Spacer()
-            } else {
-                VStack(spacing: 0) {
-                    // Search and Filter (fixed at top, outside ScrollView)
-                    HStack(spacing: 12) {
-                        SearchBar(
-                            text: $searchText,
-                            placeholder: "Search logs..."
-                        )
-
-                        FilterButton(
-                            isActive: isFilterActive,
-                            action: { showingFilterSheet.toggle() }
-                        )
-                    }
-                    .padding(.horizontal, 24)
-                    .padding(.top, 16)
-                    .padding(.bottom, 16)
-                    .background(Color.background)
-
-                    // Scrollable content
-                    ScrollView {
-                        VStack(spacing: 0) {
-                            // Header (inside ScrollView so it can be swapped)
-                            VStack(alignment: .leading, spacing: 8) {
-                                HStack(alignment: .bottom) {
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        Text(headerTitle)
-                                            .font(.display(28, weight: .bold))
-                                            .foregroundColor(.onSurface)
-
-                                        Text(headerSubtitle)
-                                            .font(.body(15))
-                                            .foregroundColor(.onSurfaceVariant)
-                                    }
-
-                                    Spacer()
-                                }
-                            }
-                            .padding(.horizontal, 24)
-                            .padding(.bottom, 16)
-
-                            // Logs list
-                            LazyVStack(spacing: 24) {
-                                ForEach(Array(filteredAndSortedLogs.enumerated()), id: \.element.id) { index, log in
-                                    Button {
-                                        selectedLog = log
-                                    } label: {
-                                        if index < 3 {
-                                            // Featured card design for first 3 logs
-                                            FeaturedLogCardView(log: log, index: index)
-                                        } else {
-                                            // Compact card design for remaining logs
-                                            CompactLogCardView(log: log)
-                                        }
-                                    }
-                                    .buttonStyle(.plain)
-                                }
-                            }
-                            .padding(.horizontal, 24)
-                            .padding(.bottom, 24)
-                        }
-                    }
-                }
-            }
+            mainContent
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.background)
@@ -112,6 +26,119 @@ struct LogsListView: View {
         .sheet(isPresented: $showingFilterSheet) {
             FilterSheet(selectedOption: $sortOption)
         }
+    }
+
+    // MARK: - Main Sections
+
+    @ViewBuilder
+    private var mainContent: some View {
+        if journal.logs.isEmpty {
+            emptyState
+        } else {
+            logsContent
+        }
+    }
+
+    private var emptyState: some View {
+        VStack(spacing: 16) {
+            Spacer()
+
+            Image(systemName: "list.bullet.clipboard")
+                .font(.system(size: 60))
+                .foregroundColor(.tertiaryColor)
+                .accessibilityIdentifier(LogsListAccessibilityIdentifiers.emptyStateIcon)
+
+            VStack(spacing: 8) {
+                Text("No Logs Yet")
+                    .font(.headline(20, weight: .bold))
+                    .foregroundColor(.onSurface)
+                    .accessibilityIdentifier(LogsListAccessibilityIdentifiers.emptyStateTitle)
+
+                Text("Tap the New Log tab to create your first field observation")
+                    .font(.body(15))
+                    .foregroundColor(.onSurfaceVariant)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 40)
+                    .accessibilityIdentifier(LogsListAccessibilityIdentifiers.emptyStateMessage)
+            }
+
+            Spacer()
+        }
+    }
+
+    private var logsContent: some View {
+        VStack(spacing: 0) {
+            searchAndFilter
+            scrollableContent
+        }
+    }
+
+    private var searchAndFilter: some View {
+        HStack(spacing: 12) {
+            SearchBar(
+                text: $searchText,
+                placeholder: "Search logs..."
+            )
+            .accessibilityIdentifier(LogsListAccessibilityIdentifiers.searchField)
+
+            FilterButton(
+                isActive: isFilterActive,
+                action: { showingFilterSheet.toggle() }
+            )
+            .accessibilityIdentifier(LogsListAccessibilityIdentifiers.filterButton)
+        }
+        .padding(.horizontal, 24)
+        .padding(.top, 16)
+        .padding(.bottom, 16)
+        .background(Color.background)
+    }
+
+    private var scrollableContent: some View {
+        ScrollView {
+            VStack(spacing: 0) {
+                headerSection
+                logsList
+            }
+        }
+    }
+
+    private var headerSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .bottom) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(headerTitle)
+                        .font(.display(28, weight: .bold))
+                        .foregroundColor(.onSurface)
+
+                    Text(headerSubtitle)
+                        .font(.body(15))
+                        .foregroundColor(.onSurfaceVariant)
+                }
+
+                Spacer()
+            }
+        }
+        .padding(.horizontal, 24)
+        .padding(.bottom, 16)
+    }
+
+    private var logsList: some View {
+        LazyVStack(spacing: 24) {
+            ForEach(Array(filteredAndSortedLogs.enumerated()), id: \.element.id) { index, log in
+                Button {
+                    selectedLog = log
+                } label: {
+                    if index < 3 {
+                        FeaturedLogCardView(log: log, index: index)
+                    } else {
+                        CompactLogCardView(log: log)
+                    }
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, 24)
+        .padding(.bottom, 24)
     }
 
     // MARK: - Computed Properties

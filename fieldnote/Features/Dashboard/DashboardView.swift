@@ -19,122 +19,9 @@ import SwiftUI
       var body: some View {
           NavigationStack {
               ZStack {
-                  if viewModel.journals.isEmpty {
-                      // Empty State
-                      VStack(spacing: 24) {
-                          Spacer()
-
-                          ZStack {
-                              Circle()
-                                  .fill(Color.primaryColor.opacity(0.1))
-                                  .frame(width: 120, height: 120)
-
-                              Image(systemName: "book.closed.fill")
-                                  .font(.system(size: 50))
-                                  .foregroundColor(.primaryColor)
-                          }
-
-                          VStack(spacing: 8) {
-                              Text("No Journals Yet")
-                                  .font(.headline(24, weight: .bold))
-                                  .foregroundColor(.onSurface)
-
-                              Text("Start by adding a new journal")
-                                  .font(.body(16, weight: .regular))
-                                  .foregroundColor(.onSurfaceVariant)
-                          }
-
-                          Spacer()
-                          Spacer()
-                      }
-                      .frame(maxWidth: .infinity, maxHeight: .infinity)
-                      .background(Color.surfaceBackground)
-                  } else {
-                      ScrollView {
-                          VStack(spacing: 24) {
-                              // Search and Filter
-                              HStack(spacing: 12) {
-                                  SearchBar(
-                                      text: $viewModel.searchText,
-                                      placeholder: "Search Journals..."
-                                  )
-
-                                  FilterButton(
-                                      isActive: viewModel.isFilterActive,
-                                      action: { viewModel.toggleFilterSheet() }
-                                  )
-                              }
-                              .padding(.horizontal, 24)
-                              .padding(.top, 16)
-
-                              // Journals Grid
-                              LazyVGrid(columns: columns, spacing: 32) {
-                                  ForEach(viewModel.filteredJournals) { journal in
-                                      JournalCardStyle(
-                                          journal: journal,
-                                          onTap: { viewModel.requestJournalAccess(journal) },
-                                          onSettingsTap: { viewModel.openSettings(for: journal) }
-                                      )
-                                      .id("\(journal.id)-\(journal.lastModified.timeIntervalSince1970)")
-                                  }
-                              }
-                              .padding(.horizontal, 24)
-                              .padding(.bottom, 100)
-                          }
-                      }
-                      .background(Color.surfaceBackground)
-                      .background(
-                          NavigationLink(
-                              destination: Group {
-                                  if let journal = viewModel.journalToUnlock {
-                                      JournalContainerView(journal: journal)
-                                  }
-                              },
-                              isActive: Binding(
-                                  get: { viewModel.shouldNavigateToJournal && viewModel.journalToUnlock != nil },
-                                  set: { viewModel.shouldNavigateToJournal = $0 }
-                              )
-                          ) {
-                              EmptyView()
-                          }
-                          .hidden()
-                          .onChange(of: viewModel.shouldNavigateToJournal) { _, isActive in
-                              if !isActive {
-                                  // Navigation dismissed, reset state
-                                  viewModel.resetNavigation()
-                              }
-                          }
-                      )
-                  }
-
-                  // Always show title
-                  Color.clear
-                      .navigationTitle("Journals")
-                      .navigationBarTitleDisplayMode(.large)
-
-                  // Floating Action Button
-                  VStack {
-                      Spacer()
-                      HStack {
-                          Spacer()
-                          Button(action: { viewModel.toggleCreateJournal() }) {
-                              HStack(spacing: 8) {
-                                  Image(systemName: "plus.circle.fill")
-                                      .font(.system(size: 24))
-                                  Text("New Journal")
-                                      .font(.body(16, weight: .bold))
-                              }
-                              .foregroundColor(.white)
-                              .padding(.horizontal, 24)
-                              .padding(.vertical, 16)
-                              .background(Color.primaryColor)
-                              .clipShape(Capsule())
-                              .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
-                          }
-                          .padding(.trailing, 24)
-                          .padding(.bottom, 32)
-                      }
-                  }
+                  mainContent
+                  navigationTitle
+                  floatingActionButton
               }
               .sheet(isPresented: $viewModel.showingCreateJournal) {
                   CreateJournalSheet(onCreate: { name in
@@ -155,7 +42,6 @@ import SwiftUI
                   FilterSheet(selectedOption: $viewModel.sortOption)
               }
               .sheet(isPresented: $viewModel.showingPasswordPrompt, onDismiss: {
-                  // Clean up state when sheet is dismissed (e.g., swipe down)
                   viewModel.cancelPasswordPrompt()
               }) {
                   PasswordPromptSheet(
@@ -164,7 +50,6 @@ import SwiftUI
                       actionButtonText: "Unlock",
                       onSubmit: { password in
                           let isValid = viewModel.verifyPassword(password)
-                          // verifyPassword already handles dismissal
                           return isValid
                       },
                       lockoutMessage: viewModel.lockoutMessage,
@@ -178,7 +63,6 @@ import SwiftUI
                   )
               }
               .sheet(isPresented: $viewModel.showingPasswordPromptForSettings, onDismiss: {
-                  // Clean up state when sheet is dismissed (e.g., swipe down)
                   viewModel.cancelPasswordPromptForSettings()
               }) {
                   PasswordPromptSheet(
@@ -210,6 +94,152 @@ import SwiftUI
               }
           }
       }
+
+      // MARK: - Main Sections
+
+      @ViewBuilder
+      private var mainContent: some View {
+          if viewModel.journals.isEmpty {
+              emptyState
+          } else {
+              journalsContent
+          }
+      }
+
+      private var emptyState: some View {
+          VStack(spacing: 24) {
+              Spacer()
+
+              ZStack {
+                  Circle()
+                      .fill(Color.primaryColor.opacity(0.1))
+                      .frame(width: 120, height: 120)
+
+                  Image(systemName: "book.closed.fill")
+                      .font(.system(size: 50))
+                      .foregroundColor(.primaryColor)
+                      .accessibilityIdentifier(DashboardAccessibilityIdentifiers.emptyStateIcon)
+              }
+
+              VStack(spacing: 8) {
+                  Text("No Journals Yet")
+                      .font(.headline(24, weight: .bold))
+                      .foregroundColor(.onSurface)
+                      .accessibilityIdentifier(DashboardAccessibilityIdentifiers.emptyStateTitle)
+
+                  Text("Start by adding a new journal")
+                      .font(.body(16, weight: .regular))
+                      .foregroundColor(.onSurfaceVariant)
+                      .accessibilityIdentifier(DashboardAccessibilityIdentifiers.emptyStateMessage)
+              }
+
+              Spacer()
+              Spacer()
+          }
+          .frame(maxWidth: .infinity, maxHeight: .infinity)
+          .background(Color.surfaceBackground)
+      }
+
+      private var journalsContent: some View {
+          ScrollView {
+              VStack(spacing: 24) {
+                  searchAndFilter
+                  journalsGrid
+              }
+          }
+          .background(Color.surfaceBackground)
+          .background(hiddenNavigationLink)
+      }
+
+      private var searchAndFilter: some View {
+          HStack(spacing: 12) {
+              SearchBar(
+                  text: $viewModel.searchText,
+                  placeholder: "Search Journals..."
+              )
+              .accessibilityIdentifier(DashboardAccessibilityIdentifiers.searchField)
+
+              FilterButton(
+                  isActive: viewModel.isFilterActive,
+                  action: { viewModel.toggleFilterSheet() }
+              )
+              .accessibilityIdentifier(DashboardAccessibilityIdentifiers.filterButton)
+          }
+          .padding(.horizontal, 24)
+          .padding(.top, 16)
+      }
+
+      private var journalsGrid: some View {
+          LazyVGrid(columns: columns, spacing: 32) {
+              ForEach(viewModel.filteredJournals) { journal in
+                  JournalCardStyle(
+                      journal: journal,
+                      onTap: { viewModel.requestJournalAccess(journal) },
+                      onSettingsTap: { viewModel.openSettings(for: journal) }
+                  )
+                  .id("\(journal.id)-\(journal.lastModified.timeIntervalSince1970)")
+                  .accessibilityIdentifier(DashboardAccessibilityIdentifiers.journalCard(journal.id.uuidString))
+              }
+          }
+          .padding(.horizontal, 24)
+          .padding(.bottom, 100)
+      }
+
+      private var hiddenNavigationLink: some View {
+          NavigationLink(
+              destination: Group {
+                  if let journal = viewModel.journalToUnlock {
+                      JournalContainerView(journal: journal)
+                  }
+              },
+              isActive: Binding(
+                  get: { viewModel.shouldNavigateToJournal && viewModel.journalToUnlock != nil },
+                  set: { viewModel.shouldNavigateToJournal = $0 }
+              )
+          ) {
+              EmptyView()
+          }
+          .hidden()
+          .onChange(of: viewModel.shouldNavigateToJournal) { _, isActive in
+              if !isActive {
+                  viewModel.resetNavigation()
+              }
+          }
+      }
+
+      private var navigationTitle: some View {
+          Color.clear
+              .navigationTitle("Journals")
+              .navigationBarTitleDisplayMode(.large)
+      }
+
+      private var floatingActionButton: some View {
+          VStack {
+              Spacer()
+              HStack {
+                  Spacer()
+                  Button(action: { viewModel.toggleCreateJournal() }) {
+                      HStack(spacing: 8) {
+                          Image(systemName: "plus.circle.fill")
+                              .font(.system(size: 24))
+                          Text("New Journal")
+                              .font(.body(16, weight: .bold))
+                      }
+                      .foregroundColor(.white)
+                      .padding(.horizontal, 24)
+                      .padding(.vertical, 16)
+                      .background(Color.primaryColor)
+                      .clipShape(Capsule())
+                      .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
+                  }
+                  .accessibilityIdentifier(DashboardAccessibilityIdentifiers.newJournalButton)
+                  .padding(.trailing, 24)
+                  .padding(.bottom, 32)
+              }
+          }
+      }
+
+      // MARK: - Grid Configuration
 
       private var columns: [GridItem] {
           [
@@ -480,16 +510,20 @@ import SwiftUI
                           .font(.body(13, weight: .regular))
                           .foregroundColor(.onSurfaceVariant)
                           .textCase(.uppercase)
+                          .accessibilityIdentifier(DashboardAccessibilityIdentifiers.createJournalNameLabel)
                       TextField("Enter name", text: $viewModel.journalName)
                           .font(.body(17))
                           .textFieldStyle(.roundedBorder)
+                          .accessibilityIdentifier(DashboardAccessibilityIdentifiers.createJournalNameField)
                   }
 
                   Text("Create a new journal to organize your field observations")
                       .font(.body(14))
                       .foregroundColor(.secondaryColor)
+                      .accessibilityIdentifier(DashboardAccessibilityIdentifiers.createJournalDescription)
               }
           }
+          .accessibilityIdentifier(DashboardAccessibilityIdentifiers.createJournalSheet)
       }
   }
 

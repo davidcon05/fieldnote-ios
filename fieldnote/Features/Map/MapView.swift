@@ -15,6 +15,11 @@ struct MapView: View {
     @State private var selectedLog: Log?
     @State private var isMetricsExpanded: Bool = false
 
+    // Dynamic height for annotation photo preview
+    private var annotationPhotoHeight: CGFloat {
+        UIScreen.main.bounds.height * 0.12  // 12% of screen height
+    }
+
     // Filter logs that have GPS coordinates
     private var logsWithGPS: [Log] {
         journal.logs.filter { $0.latitude != nil && $0.longitude != nil }
@@ -264,13 +269,13 @@ struct MapView: View {
                             image
                                 .resizable()
                                 .scaledToFill()
-                                .frame(height: 100)
+                                .frame(height: annotationPhotoHeight)
                                 .clipped()
                         case .failure(_), .empty:
                             // Fallback to placeholder if photo fails to load
                             Rectangle()
                                 .fill(Color.surfaceContainerHigh)
-                                .frame(height: 70)
+                                .frame(height: annotationPhotoHeight)
                                 .overlay(
                                     Image(systemName: "camera")
                                         .font(.system(size: 28))
@@ -279,7 +284,7 @@ struct MapView: View {
                         @unknown default:
                             Rectangle()
                                 .fill(Color.surfaceContainerHigh)
-                                .frame(height: 70)
+                                .frame(height: annotationPhotoHeight)
                                 .overlay(
                                     Image(systemName: "camera")
                                         .font(.system(size: 28))
@@ -291,7 +296,7 @@ struct MapView: View {
                     // No photos: show placeholder
                     Rectangle()
                         .fill(Color.surfaceContainerHigh)
-                        .frame(height: 70)
+                        .frame(height: annotationPhotoHeight)
                         .overlay(
                             Image(systemName: "camera")
                                 .font(.system(size: 28))
@@ -547,6 +552,10 @@ private struct MapViewWithCallout: View {
     let journal: Journal
     @State var selectedLog: Log?
 
+    private var annotationPhotoHeight: CGFloat {
+        UIScreen.main.bounds.height * 0.12  // 12% of screen height
+    }
+
     init(journal: Journal, selectedLog: Log) {
         self.journal = journal
         _selectedLog = State(initialValue: selectedLog)
@@ -599,13 +608,13 @@ private struct MapViewWithCallout: View {
                             image
                                 .resizable()
                                 .scaledToFill()
-                                .frame(height: 100)
+                                .frame(height: annotationPhotoHeight)
                                 .clipped()
                         case .failure(_), .empty:
                             // Fallback to placeholder if photo fails to load
                             Rectangle()
                                 .fill(Color.surfaceContainerHigh)
-                                .frame(height: 100)
+                                .frame(height: annotationPhotoHeight)
                                 .overlay(
                                     Image(systemName: "camera")
                                         .font(.system(size: 28))
@@ -614,7 +623,7 @@ private struct MapViewWithCallout: View {
                         @unknown default:
                             Rectangle()
                                 .fill(Color.surfaceContainerHigh)
-                                .frame(height: 100)
+                                .frame(height: annotationPhotoHeight)
                                 .overlay(
                                     Image(systemName: "camera")
                                         .font(.system(size: 28))
@@ -626,7 +635,7 @@ private struct MapViewWithCallout: View {
                     // No photos: show placeholder
                     Rectangle()
                         .fill(Color.surfaceContainerHigh)
-                        .frame(height: 100)
+                        .frame(height: annotationPhotoHeight)
                         .overlay(
                             Image(systemName: "camera")
                                 .font(.system(size: 28))

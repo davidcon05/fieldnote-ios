@@ -14,6 +14,10 @@ struct LogsListView: View {
     @State private var sortOption: SortOption = .mostRecent
     @State private var showingFilterSheet = false
 
+    private var logThumbnailHeight: CGFloat {
+        UIScreen.main.bounds.height * 0.19  // 19% of screen height
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             mainContent
@@ -236,6 +240,10 @@ struct FeaturedLogCardView: View {
 
     @State private var isExpanded = false
 
+    private var logThumbnailHeight: CGFloat {
+        UIScreen.main.bounds.height * 0.19  // 19% of screen height
+    }
+
     var body: some View {
         VStack(spacing: 0) {
                 // Image section with circular chevron button
@@ -249,21 +257,21 @@ struct FeaturedLogCardView: View {
                                 image
                                     .resizable()
                                     .scaledToFill()
-                                    .frame(height: 160)
+                                    .frame(height: logThumbnailHeight)
                                     .clipped()
                             case .failure(_), .empty:
                                 // Fallback to alternating gradient if photo fails to load
                                 alternatingGradient
-                                    .frame(height: 160)
+                                    .frame(height: logThumbnailHeight)
                             @unknown default:
                                 alternatingGradient
-                                    .frame(height: 160)
+                                    .frame(height: logThumbnailHeight)
                             }
                         }
                     } else {
                         // No photos: use alternating gradient based on index
                         alternatingGradient
-                            .frame(height: 160)
+                            .frame(height: logThumbnailHeight)
                     }
 
                     // Weather icon badge (top left)

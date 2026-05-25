@@ -94,6 +94,30 @@ final class DashboardViewModel: ObservableObject {
         sortOption != .mostRecent
     }
 
+    var searchSuggestions: [Journal] {
+        guard !searchText.isEmpty else { return [] }
+
+        // Filter journals that match the search text and sort by best match
+        return journals
+            .filter { $0.name.localizedCaseInsensitiveContains(searchText) }
+            .sorted { lhs, rhs in
+                let lhsName = lhs.name.lowercased()
+                let rhsName = rhs.name.lowercased()
+                let search = searchText.lowercased()
+
+                // Prioritize prefix matches
+                let lhsStartsWith = lhsName.hasPrefix(search)
+                let rhsStartsWith = rhsName.hasPrefix(search)
+
+                if lhsStartsWith != rhsStartsWith {
+                    return lhsStartsWith
+                }
+
+                // Then sort alphabetically
+                return lhsName < rhsName
+            }
+    }
+
     func toggleFilterSheet() {
         showingFilterSheet.toggle()
     }

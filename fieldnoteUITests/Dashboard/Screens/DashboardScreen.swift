@@ -58,6 +58,16 @@ struct DashboardScreen {
     var lockIcon: XCUIElement {
         app.images.containing(NSPredicate(format: "identifier CONTAINS 'lock'")).firstMatch
     }
+
+    // Dropdown Autocomplete
+    func searchSuggestion(_ suggestionText: String) -> XCUIElement {
+        app.buttons["searchSuggestion.\(suggestionText)"].firstMatch
+    }
+
+    var searchSuggestions: XCUIElementQuery {
+        
+        app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'searchSuggestion.'"))
+    }
 }
 
 struct CreateJournalScreen {

@@ -34,9 +34,10 @@ final class DashboardRobot: BaseRobot {
     /// Clear the search field
     @discardableResult
     func clearSearch() -> Self {
-        if screen.searchField.exists {
-            screen.searchField.tap()
-            screen.searchField.buttons["Clear text"].firstMatch.tap()
+        // Look for the clear button (xmark icon) within the app
+        let clearButton = app.buttons["xmark.circle.fill"].firstMatch
+        if clearButton.exists {
+            clearButton.tap()
         }
         return self
     }
@@ -126,6 +127,90 @@ final class DashboardRobot: BaseRobot {
     @discardableResult
     func waitForDashboard() -> Self {
         XCTAssertTrue(screen.dashboardTitle.waitForExistence(timeout: 5), "Dashboard should load")
+        return self
+    }
+
+    // MARK: - Dropdown Autocomplete Actions
+
+    /// Tap a search suggestion from the dropdown
+    @discardableResult
+    func tapSearchSuggestion(_ suggestionText: String) -> Self {
+        let suggestion = screen.searchSuggestion(suggestionText)
+        XCTAssertTrue(suggestion.waitForExistence(timeout: 2), "Search suggestion '\(suggestionText)' should exist")
+        suggestion.tap()
+        return self
+    }
+
+    // MARK: - Dropdown Autocomplete Verifications
+
+    /// Verify that a search suggestion appears in the dropdown
+    @discardableResult
+    func verifySearchSuggestionExists(_ suggestionText: String) -> Self {
+        let suggestion = screen.searchSuggestion(suggestionText)
+
+        // Debug: Print what we're looking for and what we found
+        print("=== DEBUG: Looking for suggestion '\(suggestionText)' ===")
+        print("Looking for identifier: 'searchSuggestion.\(suggestionText)'")
+        print("Suggestion exists: \(suggestion.exists)")
+
+        // List all current suggestions
+        let allSuggestions = screen.searchSuggestions
+        print("Total suggestions found: \(allSuggestions.count)")
+        for i in 0..<min(allSuggestions.count, 5) {
+            let sug = allSuggestions.element(boundBy: i)
+            print("  Suggestion \(i): identifier='\(sug.identifier)', label='\(sug.label)'")
+        }
+        print("===============================================")
+
+        XCTAssertTrue(suggestion.exists, "Search suggestion '\(suggestionText)' should be visible in dropdown")
+        return self
+    }
+
+    /// Verify that a search suggestion does not appear in the dropdown
+    @discardableResult
+    func verifySearchSuggestionDoesNotExist(_ suggestionText: String) -> Self {
+        let suggestion = screen.searchSuggestion(suggestionText)
+        XCTAssertFalse(suggestion.exists, "Search suggestion '\(suggestionText)' should not be visible")
+        return self
+    }
+
+    /// Verify that the dropdown shows the expected number of suggestions
+    @discardableResult
+    func verifyDropdownSuggestionCount(_ expectedCount: Int) -> Self {
+        let suggestions = screen.searchSuggestions
+        XCTAssertEqual(suggestions.count, expectedCount, "Dropdown should show \(expectedCount) suggestion(s)")
+        return self
+    }
+
+    /// Verify the dropdown is visible
+    @discardableResult
+    func verifyDropdownIsVisible() -> Self {
+        // Wait a moment for dropdown animation
+        sleep(1)
+
+        let suggestions = screen.searchSuggestions
+
+        // Debug: Print all buttons to see what's available
+        print("=== DEBUG: Searching for dropdown suggestions ===")
+        print("Found \(suggestions.count) suggestions matching 'searchSuggestion.' prefix")
+
+        // Print all buttons with their identifiers
+        let allButtons = app.buttons.allElementsBoundByIndex
+        print("Total buttons in view: \(allButtons.count)")
+        for (index, button) in allButtons.prefix(20).enumerated() {
+            print("Button \(index): identifier='\(button.identifier)', label='\(button.label)', exists=\(button.exists)")
+        }
+        print("==============================================")
+
+        XCTAssertGreaterThan(suggestions.count, 0, "Dropdown should be visible with at least one suggestion")
+        return self
+    }
+
+    /// Verify the dropdown is hidden
+    @discardableResult
+    func verifyDropdownIsHidden() -> Self {
+        let suggestions = screen.searchSuggestions
+        XCTAssertEqual(suggestions.count, 0, "Dropdown should be hidden")
         return self
     }
 }

@@ -152,12 +152,18 @@ import SwiftUI
       }
 
       private var searchAndFilter: some View {
-          HStack(spacing: 12) {
-              SearchBar(
+          HStack(alignment: .top, spacing: 12) {
+              SearchBarWithDropdown(
                   text: $viewModel.searchText,
-                  placeholder: "Search Journals..."
+                  placeholder: "Search Journals...",
+                  suggestions: viewModel.searchSuggestions,
+                  itemLabel: { $0.name },
+                  itemIcon: { _ in "book.closed.fill" },
+                  searchFieldIdentifier: DashboardAccessibilityIdentifiers.searchField,
+                  onSelectSuggestion: { journal in
+                      viewModel.requestJournalAccess(journal)
+                  }
               )
-              .accessibilityIdentifier(DashboardAccessibilityIdentifiers.searchField)
 
               FilterButton(
                   isActive: viewModel.isFilterActive,

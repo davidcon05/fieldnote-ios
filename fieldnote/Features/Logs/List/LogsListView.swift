@@ -75,11 +75,17 @@ struct LogsListView: View {
 
     private var searchAndFilter: some View {
         HStack(spacing: 12) {
-            SearchBar(
+            SearchBarWithDropdown(
                 text: $searchText,
-                placeholder: "Search logs..."
+                placeholder: "Search logs...",
+                suggestions: searchSuggestions,
+                itemLabel: { $0.title },
+                itemIcon: { _ in "doc.text.fill" },
+                searchFieldIdentifier: LogsListAccessibilityIdentifiers.searchField,
+                onSelectSuggestion: { log in
+                    selectedLog = log
+                }
             )
-            .accessibilityIdentifier(LogsListAccessibilityIdentifiers.searchField)
 
             FilterButton(
                 isActive: isFilterActive,
@@ -188,6 +194,37 @@ struct LogsListView: View {
             let count = filteredAndSortedLogs.count
             return "\(count) result\(count == 1 ? "" : "s") found"
         }
+    }
+
+    private var searchSuggestions: [Log] {
+        guard !searchText.isEmpty else { return [] }
+
+        // Filter logs that match the search text and sort by best match
+        return journal.logs
+            .filter { log in
+                log.title.localizedCaseInsensitiveContains(searchText) ||
+                log.notes.localizedCaseInsensitiveContains(searchText) ||
+                log.audioMemos.contains { memo in
+                    memo.title.localizedCaseInsensitiveContains(searchText) ||
+                    (memo.transcription?.localizedCaseInsensitiveContains(searchText) ?? false)
+                }
+            }
+            .sorted { lhs, rhs in
+                let lhsTitle = lhs.title.lowercased()
+                let rhsTitle = rhs.title.lowercased()
+                let search = searchText.lowercased()
+
+                // Prioritize title prefix matches
+                let lhsStartsWith = lhsTitle.hasPrefix(search)
+                let rhsStartsWith = rhsTitle.hasPrefix(search)
+
+                if lhsStartsWith != rhsStartsWith {
+                    return lhsStartsWith
+                }
+
+                // Then sort by most recent
+                return lhs.timestamp > rhs.timestamp
+            }
     }
 }
 

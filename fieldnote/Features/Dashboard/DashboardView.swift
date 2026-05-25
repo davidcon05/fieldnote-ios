@@ -6,15 +6,16 @@
 //
 
 import SwiftUI
-  import SwiftData
+import SwiftData
 
-  struct DashboardView: View {
-      @StateObject private var viewModel: DashboardViewModel
+struct DashboardView: View {
+    @Query(sort: \Journal.lastModified, order: .reverse) private var journals: [Journal]
+    @Environment(\.modelContext) private var modelContext
+    @StateObject private var viewModel = DashboardViewModel()
 
-      init(modelContext: ModelContext) {
-          let repository = SwiftDataJournalRepository(modelContext: modelContext)
-          _viewModel = StateObject(wrappedValue: DashboardViewModel(repository: repository))
-      }
+    init() {
+        // No need to pass modelContext anymore
+    }
 
       var body: some View {
           NavigationStack {
@@ -25,15 +26,15 @@ import SwiftUI
               }
               .sheet(isPresented: $viewModel.showingCreateJournal) {
                   CreateJournalSheet(onCreate: { name in
-                      viewModel.createJournal(name: name)
+                      viewModel.createJournal(name: name, modelContext: modelContext)
                   })
               }
               .sheet(isPresented: $viewModel.showingSettings) {
                   if let journal = viewModel.selectedJournal {
                       JournalSettingsSheet(
                           journal: .constant(journal),
-                          onSave: { viewModel.saveJournalSettings() },
-                          onDelete: { viewModel.deleteJournal(journal) },
+                          onSave: { viewModel.saveJournalSettings(modelContext: modelContext) },
+                          onDelete: { viewModel.deleteJournal(journal, modelContext: modelContext) },
                           keychainManager: viewModel.keychainManager
                       )
                   }
@@ -89,9 +90,6 @@ import SwiftUI
               } message: {
                   Text(viewModel.errorMessage ?? "")
               }
-              .onAppear {
-                  viewModel.loadJournals()
-              }
           }
       }
 
@@ -99,7 +97,7 @@ import SwiftUI
 
       @ViewBuilder
       private var mainContent: some View {
-          if viewModel.journals.isEmpty {
+          if journals.isEmpty {
               emptyState
           } else {
               journalsContent
@@ -156,7 +154,7 @@ import SwiftUI
               SearchBarWithDropdown(
                   text: $viewModel.searchText,
                   placeholder: "Search Journals...",
-                  suggestions: viewModel.searchSuggestions,
+                  suggestions: viewModel.searchSuggestions(from: journals),
                   itemLabel: { $0.name },
                   itemIcon: { _ in "book.closed.fill" },
                   searchFieldIdentifier: DashboardAccessibilityIdentifiers.searchField,
@@ -177,7 +175,7 @@ import SwiftUI
 
       private var journalsGrid: some View {
           LazyVGrid(columns: columns, spacing: 32) {
-              ForEach(viewModel.filteredJournals) { journal in
+              ForEach(viewModel.filteredJournals(from: journals)) { journal in
                   JournalCardStyle(
                       journal: journal,
                       onTap: { viewModel.requestJournalAccess(journal) },
@@ -319,6 +317,7 @@ import SwiftUI
               } placeholder: {
                   themeGradientView
               }
+              .id("\(coverURL.absoluteString)-\(journal.lastModified.timeIntervalSince1970)")
           } else if let firstMediaURL = journal.logs.first?.mediaURLs.first {
               // First log's photo
               AsyncImage(url: firstMediaURL) { image in
@@ -327,6 +326,7 @@ import SwiftUI
               } placeholder: {
                   themeGradientView
               }
+              .id("\(firstMediaURL.absoluteString)-\(journal.lastModified.timeIntervalSince1970)")
           } else {
               // Empty journal fallback
               themeGradientView
@@ -600,7 +600,7 @@ import SwiftUI
       container.mainContext.insert(journal5)
       container.mainContext.insert(journal6)
 
-      return DashboardView(modelContext: container.mainContext)
+      return DashboardView()
           .modelContainer(container)
   }
 
@@ -608,6 +608,6 @@ import SwiftUI
       let config = ModelConfiguration(isStoredInMemoryOnly: true)
       let container = try! ModelContainer(for: Journal.self, Log.self, configurations: config)
 
-      return DashboardView(modelContext: container.mainContext)
+      return DashboardView()
           .modelContainer(container)
   }

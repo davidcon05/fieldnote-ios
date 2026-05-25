@@ -30,6 +30,9 @@ struct EditLogView: View {
     @State private var editedLongitude: Double?
     @State private var editedAltitude: Double?
 
+    // Draft state tracking
+    @State private var softDeletedPhotoURLs: Set<URL> = []
+
     // UI state
     @State private var showingDeleteConfirmation = false
     @State private var deleteConfirmationText = ""
@@ -44,6 +47,7 @@ struct EditLogView: View {
     @State private var showingPhotoPicker = false
     @State private var capturedImage: UIImage?
     @State private var selectedImages: [UIImage] = []
+    @State private var showingUnsavedChangesAlert = false
 
     private let photoStorage = PhotoStorageService.shared
 
@@ -71,8 +75,8 @@ struct EditLogView: View {
                 VStack(spacing: 0) {
                     heroSection
                     formContent
+                        .padding(.horizontal, 24)
                 }
-                .padding(.horizontal, 24)
                 .padding(.top, 24)
                 .padding(.bottom, 180)
             }
@@ -82,6 +86,27 @@ struct EditLogView: View {
         }
         .navigationTitle("Edit Log")
         .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(hasUnsavedChanges)
+        .toolbar {
+            if hasUnsavedChanges {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button(action: { showingUnsavedChangesAlert = true }) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "chevron.left")
+                            Text("Back")
+                        }
+                    }
+                }
+            }
+        }
+        .alert("Unsaved Changes", isPresented: $showingUnsavedChangesAlert) {
+            Button("Discard Changes", role: .destructive) {
+                dismiss()
+            }
+            Button("Keep Editing", role: .cancel) { }
+        } message: {
+            Text("You have unsaved changes. Are you sure you want to discard them?")
+        }
         .alert("Refresh Weather Data?", isPresented: $showingWeatherRefreshAlert) {
             Button("Cancel", role: .cancel) { }
             Button("Refresh") { refreshWeatherData() }
@@ -141,6 +166,7 @@ struct EditLogView: View {
                 mode: .editable,
                 showGradientOverlay: false,
                 showMetadata: false,
+                softDeletedPhotoURLs: softDeletedPhotoURLs,
                 onPhotoSelect: { index in
                     selectedPhotoIndex = index
                 },
@@ -149,6 +175,9 @@ struct EditLogView: View {
                 },
                 onDeletePhoto: { index in
                     deletePhoto(at: index)
+                },
+                onRestorePhoto: { index in
+                    restorePhoto(at: index)
                 }
             )
         }
@@ -322,6 +351,16 @@ struct EditLogView: View {
         !editedTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
+    private var hasUnsavedChanges: Bool {
+        editedTitle != log.title ||
+        editedNotes != log.notes ||
+        editedPhotoURLs != log.mediaURLs ||
+        !softDeletedPhotoURLs.isEmpty ||
+        editedLatitude != log.latitude ||
+        editedLongitude != log.longitude ||
+        editedAltitude != log.altitude
+    }
+
     private var currentLocation: CLLocation? {
         guard let lat = editedLatitude, let lon = editedLongitude else { return nil }
         return CLLocation(latitude: lat, longitude: lon)
@@ -448,10 +487,18 @@ struct EditLogView: View {
     struct TimeoutError: Error {}
 
     private func saveChanges() {
+        // Apply soft deletions - filter out soft-deleted photos
+        let finalPhotoURLs = editedPhotoURLs.filter { !softDeletedPhotoURLs.contains($0) }
+
+        // Delete soft-deleted photos from disk
+        for url in softDeletedPhotoURLs {
+            photoStorage.deletePhoto(at: url)
+        }
+
         // Update log properties (SwiftData auto-saves)
         log.title = editedTitle
         log.notes = editedNotes
-        log.mediaURLs = editedPhotoURLs
+        log.mediaURLs = finalPhotoURLs
         // Note: Audio memos are edited directly through MultiAudioMemoView binding
         log.latitude = editedLatitude
         log.longitude = editedLongitude
@@ -490,20 +537,20 @@ struct EditLogView: View {
         guard index < editedPhotoURLs.count else { return }
         let url = editedPhotoURLs[index]
 
-        // Remove from array with animation for smooth transition
+        // Soft delete - just mark as deleted with animation
         withAnimation {
-            editedPhotoURLs.remove(at: index)
+            softDeletedPhotoURLs.insert(url)
         }
+    }
 
-        // Adjust selected index after removal to prevent out-of-bounds
-        if editedPhotoURLs.isEmpty {
-            selectedPhotoIndex = 0
-        } else if selectedPhotoIndex >= editedPhotoURLs.count {
-            selectedPhotoIndex = editedPhotoURLs.count - 1
+    private func restorePhoto(at index: Int) {
+        guard index < editedPhotoURLs.count else { return }
+        let url = editedPhotoURLs[index]
+
+        // Remove from soft delete set with animation
+        withAnimation {
+            softDeletedPhotoURLs.remove(url)
         }
-
-        // Delete file from disk
-        photoStorage.deletePhoto(at: url)
     }
 }
 

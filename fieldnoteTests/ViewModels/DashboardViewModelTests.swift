@@ -8,66 +8,55 @@
 import Testing
 @testable import fieldnote
 import Foundation
+import SwiftData
 
 @MainActor
 @Suite("DashboardViewModel Tests")
 struct DashboardViewModelTests {
 
-    func makeViewModel(with seedData: [Journal] = []) -> (DashboardViewModel, FakeJournalRepository) {
-        let repository = FakeJournalRepository()
-        repository.setSeedData(seedData)
-        let viewModel = DashboardViewModel(repository: repository)
-        return (viewModel, repository)
+    func makeTestContainer() throws -> ModelContainer {
+        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try ModelContainer(for: Journal.self, Log.self, configurations: config)
+        return container
     }
 
-    // MARK: - Empty State Tests
-
-    @Test("Dashboard shows empty state when no journals exist")
-    func testEmptyState_noJournals() async throws {
-        // Given: New ViewModel with no journals
-        let (sut, _) = makeViewModel()
-
-        // Then: journals array should be empty
-        #expect(sut.journals.isEmpty)
-    }
-
-    @Test("Dashboard does not show empty state when journals exist")
-    func testEmptyState_withJournals() async throws {
-        // Given: Repository with one journal
-        let journal = Journal(name: "Test Journal")
-        let (sut, _) = makeViewModel(with: [journal])
-
-        // Then: journals array should not be empty
-        #expect(!sut.journals.isEmpty)
-        #expect(sut.journals.count == 1)
+    func makeViewModel() -> DashboardViewModel {
+        return DashboardViewModel()
     }
 
     // MARK: - Create Journal Tests
 
-    @Test("Creating journal adds it to journals array")
-    func testCreateJournal_addsToArray() async throws {
-        // Given: New ViewModel with empty journals
-        let (sut, _) = makeViewModel()
-        #expect(sut.journals.isEmpty)
+    @Test("Creating journal saves to context")
+    func testCreateJournal_savesToContext() async throws {
+        // Given: New ViewModel and ModelContext
+        let sut = makeViewModel()
+        let container = try makeTestContainer()
+        let context = ModelContext(container)
 
         // When: Create a new journal
-        sut.createJournal(name: "Olympic National Park")
+        sut.createJournal(name: "Olympic National Park", modelContext: context)
 
-        // Then: Journal should be in array
-        #expect(sut.journals.count == 1)
-        #expect(sut.journals.first?.name == "Olympic National Park")
+        // Then: Journal should be in context
+        let descriptor = FetchDescriptor<Journal>()
+        let journals = try context.fetch(descriptor)
+        #expect(journals.count == 1)
+        #expect(journals.first?.name == "Olympic National Park")
     }
 
     @Test("Creating journal assigns random theme")
     func testCreateJournal_assignsTheme() async throws {
-        // Given: New ViewModel
-        let (sut, _) = makeViewModel()
+        // Given: New ViewModel and ModelContext
+        let sut = makeViewModel()
+        let container = try makeTestContainer()
+        let context = ModelContext(container)
 
         // When: Create a new journal
-        sut.createJournal(name: "Test Journal")
+        sut.createJournal(name: "Test Journal", modelContext: context)
 
         // Then: Journal should have theme assigned
-        let journal = try #require(sut.journals.first)
+        let descriptor = FetchDescriptor<Journal>()
+        let journals = try context.fetch(descriptor)
+        let journal = try #require(journals.first)
         #expect(!journal.themeIcon.isEmpty)
         #expect(!journal.themeColorHex.isEmpty)
     }
@@ -75,11 +64,13 @@ struct DashboardViewModelTests {
     @Test("Creating journal closes create sheet")
     func testCreateJournal_closesSheet() async throws {
         // Given: ViewModel with create sheet showing
-        let (sut, _) = makeViewModel()
+        let sut = makeViewModel()
+        let container = try makeTestContainer()
+        let context = ModelContext(container)
         sut.showingCreateJournal = true
 
         // When: Create a journal
-        sut.createJournal(name: "Test Journal")
+        sut.createJournal(name: "Test Journal", modelContext: context)
 
         // Then: Sheet should be dismissed
         #expect(sut.showingCreateJournal == false)
@@ -87,33 +78,47 @@ struct DashboardViewModelTests {
 
     // MARK: - Delete Journal Tests
 
-    @Test("Deleting journal removes it from array")
-    func testDeleteJournal_removesFromArray() async throws {
-        // Given: ViewModel with one journal
-        let (sut, _) = makeViewModel()
-        sut.createJournal(name: "Test Journal")
-        #expect(sut.journals.count == 1)
+    @Test("Deleting journal removes it from context")
+    func testDeleteJournal_removesFromContext() async throws {
+        // Given: ModelContext with one journal
+        let sut = makeViewModel()
+        let container = try makeTestContainer()
+        let context = ModelContext(container)
 
-        let journal = try #require(sut.journals.first)
+        let journal = Journal(name: "Test Journal")
+        context.insert(journal)
+        try context.save()
+
+        // Verify journal exists
+        var descriptor = FetchDescriptor<Journal>()
+        var journals = try context.fetch(descriptor)
+        #expect(journals.count == 1)
 
         // When: Delete the journal
-        sut.deleteJournal(journal)
+        sut.deleteJournal(journal, modelContext: context)
 
-        // Then: Array should be empty
-        #expect(sut.journals.isEmpty)
+        // Then: Context should be empty
+        descriptor = FetchDescriptor<Journal>()
+        journals = try context.fetch(descriptor)
+        #expect(journals.isEmpty)
     }
 
     @Test("Deleting journal closes settings sheet")
     func testDeleteJournal_closesSheet() async throws {
         // Given: ViewModel with settings showing for a journal
-        let (sut, _) = makeViewModel()
-        sut.createJournal(name: "Test Journal")
-        let journal = try #require(sut.journals.first)
+        let sut = makeViewModel()
+        let container = try makeTestContainer()
+        let context = ModelContext(container)
+
+        let journal = Journal(name: "Test Journal")
+        context.insert(journal)
+        try context.save()
+
         sut.openSettings(for: journal)
         #expect(sut.showingSettings == true)
 
         // When: Delete the journal
-        sut.deleteJournal(journal)
+        sut.deleteJournal(journal, modelContext: context)
 
         // Then: Settings sheet should be dismissed
         #expect(sut.showingSettings == false)
@@ -125,11 +130,15 @@ struct DashboardViewModelTests {
     @Test("Opening settings shows sheet and sets selected journal")
     func testOpenSettings_showsSheet() async throws {
         // Given: ViewModel with one journal
-        let (sut, _) = makeViewModel()
-        sut.createJournal(name: "Test Journal")
-        let journal = try #require(sut.journals.first)
+        let sut = makeViewModel()
+        let container = try makeTestContainer()
+        let context = ModelContext(container)
 
-        // When: Open settings
+        let journal = Journal(name: "Test Journal")
+        context.insert(journal)
+        try context.save()
+
+        // When: Open settings (non-password protected)
         sut.openSettings(for: journal)
 
         // Then: Sheet should show and journal should be selected
@@ -137,43 +146,103 @@ struct DashboardViewModelTests {
         #expect(sut.selectedJournal?.id == journal.id)
     }
 
-    @Test("Saving journal settings updates last modified date")
-    func testSaveSettings_updatesLastModified() async throws {
+    @Test("Saving journal settings saves to context")
+    func testSaveSettings_savesToContext() async throws {
         // Given: ViewModel with journal
-        let (sut, _) = makeViewModel()
-        sut.createJournal(name: "Test Journal")
-        let journal = try #require(sut.journals.first)
-        let oldDate = journal.lastModified
+        let sut = makeViewModel()
+        let container = try makeTestContainer()
+        let context = ModelContext(container)
 
-        // Wait a moment to ensure time difference
-        try await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
+        let journal = Journal(name: "Test Journal")
+        context.insert(journal)
+        try context.save()
+
+        sut.selectedJournal = journal
 
         // When: Update journal name and save
         journal.name = "Updated Journal"
-        journal.lastModified = Date()
-        sut.saveJournalSettings()
+        sut.saveJournalSettings(modelContext: context)
 
-        // Then: Last modified should be updated
-        let updatedJournal = try #require(sut.journals.first)
-        #expect(updatedJournal.lastModified > oldDate)
+        // Then: Changes should be saved
+        let descriptor = FetchDescriptor<Journal>()
+        let journals = try context.fetch(descriptor)
+        let updatedJournal = try #require(journals.first)
+        #expect(updatedJournal.name == "Updated Journal")
     }
 
-    // MARK: - Sorting Tests
+    // MARK: - Filtering Tests
 
-    @Test("Journals are sorted by last modified date (newest first)")
-    func testJournals_sortedByLastModified() async throws {
-        // Given: Repository with journals at different modified dates
-        let journal1 = Journal(name: "Old Journal")
+    @Test("Filtered journals applies search filter")
+    func testFilteredJournals_appliesSearch() async throws {
+        // Given: Journals with different names
+        let journal1 = Journal(name: "Cedar River")
+        let journal2 = Journal(name: "Oak Forest")
+        let journal3 = Journal(name: "Pine Mountain")
+        let journals = [journal1, journal2, journal3]
+
+        let sut = makeViewModel()
+        sut.searchText = "river"
+
+        // When: Filter journals
+        let filtered = sut.filteredJournals(from: journals)
+
+        // Then: Only matching journal should be returned
+        #expect(filtered.count == 1)
+        #expect(filtered.first?.name == "Cedar River")
+    }
+
+    @Test("Filtered journals applies sort option")
+    func testFilteredJournals_appliesSort() async throws {
+        // Given: Journals with different modified dates
+        let journal1 = Journal(name: "A Journal")
         journal1.lastModified = Date().addingTimeInterval(-86400) // 1 day ago
 
-        let journal2 = Journal(name: "Recent Journal")
+        let journal2 = Journal(name: "B Journal")
         journal2.lastModified = Date() // Now
 
-        let (sut, _) = makeViewModel(with: [journal1, journal2])
+        let journals = [journal1, journal2]
 
-        // Then: Most recent should be first
-        #expect(sut.journals.count == 2)
-        #expect(sut.journals.first?.name == "Recent Journal")
-        #expect(sut.journals.last?.name == "Old Journal")
+        let sut = makeViewModel()
+        sut.sortOption = .aToZ
+
+        // When: Filter journals with A-Z sort
+        let filtered = sut.filteredJournals(from: journals)
+
+        // Then: Should be sorted alphabetically
+        #expect(filtered.count == 2)
+        #expect(filtered.first?.name == "A Journal")
+        #expect(filtered.last?.name == "B Journal")
+    }
+
+    @Test("Search suggestions returns matching journals")
+    func testSearchSuggestions_returnsMatches() async throws {
+        // Given: Journals with similar names
+        let journal1 = Journal(name: "River Valley")
+        let journal2 = Journal(name: "River Basin")
+        let journal3 = Journal(name: "Mountain Peak")
+        let journals = [journal1, journal2, journal3]
+
+        let sut = makeViewModel()
+        sut.searchText = "river"
+
+        // When: Get search suggestions
+        let suggestions = sut.searchSuggestions(from: journals)
+
+        // Then: Only matching journals should be returned
+        #expect(suggestions.count == 2)
+        #expect(suggestions.contains { $0.name == "River Valley" })
+        #expect(suggestions.contains { $0.name == "River Basin" })
+    }
+
+    @Test("isFilterActive returns true when sort is not most recent")
+    func testIsFilterActive_detectsNonDefaultSort() async throws {
+        let sut = makeViewModel()
+
+        // Default sort
+        #expect(sut.isFilterActive == false)
+
+        // Change to A-Z sort
+        sut.sortOption = .aToZ
+        #expect(sut.isFilterActive == true)
     }
 }

@@ -11,7 +11,6 @@ internal import Combine
 
 @MainActor
 final class DashboardViewModel: ObservableObject {
-    @Published var journals: [Journal] = []
     @Published var showingCreateJournal = false
     @Published var showingSettings = false
     @Published var selectedJournal: Journal?
@@ -36,16 +35,10 @@ final class DashboardViewModel: ObservableObject {
     private let lockoutDuration: TimeInterval = 300 // 5 minutes
     private var lockoutTasks: [UUID: Task<Void, Never>] = [:]
 
-    private let repository: JournalRepository
     let keychainManager: KeychainManaging // Exposed for View access
 
-    init(
-        repository: JournalRepository,
-        keychainManager: KeychainManaging = KeychainManager()
-    ) {
-        self.repository = repository
+    init(keychainManager: KeychainManaging = KeychainManager()) {
         self.keychainManager = keychainManager
-        loadJournals()
     }
 
     deinit {
@@ -53,19 +46,9 @@ final class DashboardViewModel: ObservableObject {
         lockoutTasks.values.forEach { $0.cancel() }
     }
 
-    func loadJournals() {
-        errorMessage = nil
-
-        do {
-            journals = try repository.fetchAll()
-        } catch {
-            errorMessage = "Failed to load journals: \(error.localizedDescription)"
-        }
-    }
-
     // MARK: - Search & Filter
 
-    var filteredJournals: [Journal] {
+    func filteredJournals(from journals: [Journal]) -> [Journal] {
         var result = journals
 
         // Apply search filter
@@ -94,7 +77,7 @@ final class DashboardViewModel: ObservableObject {
         sortOption != .mostRecent
     }
 
-    var searchSuggestions: [Journal] {
+    func searchSuggestions(from journals: [Journal]) -> [Journal] {
         guard !searchText.isEmpty else { return [] }
 
         // Filter journals that match the search text and sort by best match
@@ -122,12 +105,12 @@ final class DashboardViewModel: ObservableObject {
         showingFilterSheet.toggle()
     }
 
-    func createJournal(name: String) {
+    func createJournal(name: String, modelContext: ModelContext) {
         let journal = Journal(name: name)
 
         do {
-            try repository.save(journal)
-            loadJournals()
+            modelContext.insert(journal)
+            try modelContext.save()
             showingCreateJournal = false
         } catch {
             errorMessage = "Failed to create journal: \(error.localizedDescription)"
@@ -222,12 +205,11 @@ final class DashboardViewModel: ObservableObject {
         }
     }
 
-    func saveJournalSettings() {
+    func saveJournalSettings(modelContext: ModelContext) {
         guard let journal = selectedJournal else { return }
 
         do {
-            try repository.update(journal)
-            loadJournals()
+            try modelContext.save()
             showingSettings = false
             selectedJournal = nil
         } catch {
@@ -235,7 +217,7 @@ final class DashboardViewModel: ObservableObject {
         }
     }
 
-    func deleteJournal(_ journal: Journal) {
+    func deleteJournal(_ journal: Journal, modelContext: ModelContext) {
         do {
             // Clean up password from Keychain if journal is protected
             if journal.isPasswordProtected {
@@ -248,8 +230,8 @@ final class DashboardViewModel: ObservableObject {
             lockoutTasks[journal.id]?.cancel()
             lockoutTasks.removeValue(forKey: journal.id)
 
-            try repository.delete(journal)
-            loadJournals()
+            modelContext.delete(journal)
+            try modelContext.save()
             showingSettings = false
             selectedJournal = nil
         } catch {

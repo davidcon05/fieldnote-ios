@@ -7,6 +7,7 @@
 
 import Testing
 import Foundation
+import SwiftData
 @testable import fieldnote
 
 @MainActor
@@ -18,11 +19,7 @@ struct DashboardViewModelPasswordTests {
     func testPasswordVerification_Success() async throws {
         // Given
         let mockKeychain = MockKeychainManager()
-        let mockRepository = MockJournalRepository()
-        let viewModel = DashboardViewModel(
-            repository: mockRepository,
-            keychainManager: mockKeychain
-        )
+        let viewModel = DashboardViewModel(keychainManager: mockKeychain)
 
         let journal = Journal(name: "Test Journal")
         try mockKeychain.savePassword("password123", for: journal.id.uuidString)
@@ -43,11 +40,7 @@ struct DashboardViewModelPasswordTests {
     func testPasswordVerification_Failure() async throws {
         // Given
         let mockKeychain = MockKeychainManager()
-        let mockRepository = MockJournalRepository()
-        let viewModel = DashboardViewModel(
-            repository: mockRepository,
-            keychainManager: mockKeychain
-        )
+        let viewModel = DashboardViewModel(keychainManager: mockKeychain)
 
         let journal = Journal(name: "Test Journal")
         try mockKeychain.savePassword("correct", for: journal.id.uuidString)
@@ -69,11 +62,7 @@ struct DashboardViewModelPasswordTests {
     func testBruteForceProtection_LockoutAfter5Attempts() async throws {
         // Given
         let mockKeychain = MockKeychainManager()
-        let mockRepository = MockJournalRepository()
-        let viewModel = DashboardViewModel(
-            repository: mockRepository,
-            keychainManager: mockKeychain
-        )
+        let viewModel = DashboardViewModel(keychainManager: mockKeychain)
 
         let journal = Journal(name: "Test Journal")
         try mockKeychain.savePassword("correct", for: journal.id.uuidString)
@@ -94,11 +83,7 @@ struct DashboardViewModelPasswordTests {
     func testBruteForceProtection_LockedJournalRejectsAttempts() async throws {
         // Given
         let mockKeychain = MockKeychainManager()
-        let mockRepository = MockJournalRepository()
-        let viewModel = DashboardViewModel(
-            repository: mockRepository,
-            keychainManager: mockKeychain
-        )
+        let viewModel = DashboardViewModel(keychainManager: mockKeychain)
 
         let journal = Journal(name: "Test Journal")
         try mockKeychain.savePassword("correct", for: journal.id.uuidString)
@@ -121,11 +106,7 @@ struct DashboardViewModelPasswordTests {
     func testBruteForceProtection_FailedAttemptsReset() async throws {
         // Given
         let mockKeychain = MockKeychainManager()
-        let mockRepository = MockJournalRepository()
-        let viewModel = DashboardViewModel(
-            repository: mockRepository,
-            keychainManager: mockKeychain
-        )
+        let viewModel = DashboardViewModel(keychainManager: mockKeychain)
 
         let journal = Journal(name: "Test Journal")
         try mockKeychain.savePassword("correct", for: journal.id.uuidString)
@@ -154,11 +135,7 @@ struct DashboardViewModelPasswordTests {
         mockKeychain.biometricAvailable = true
         mockKeychain.biometricAuthResult = true
 
-        let mockRepository = MockJournalRepository()
-        let viewModel = DashboardViewModel(
-            repository: mockRepository,
-            keychainManager: mockKeychain
-        )
+        let viewModel = DashboardViewModel(keychainManager: mockKeychain)
 
         let journal = Journal(name: "Test Journal")
         viewModel.journalToUnlock = journal
@@ -179,11 +156,7 @@ struct DashboardViewModelPasswordTests {
         let mockKeychain = MockKeychainManager()
         mockKeychain.biometricAvailable = false
 
-        let mockRepository = MockJournalRepository()
-        let viewModel = DashboardViewModel(
-            repository: mockRepository,
-            keychainManager: mockKeychain
-        )
+        let viewModel = DashboardViewModel(keychainManager: mockKeychain)
 
         let journal = Journal(name: "Test Journal")
         viewModel.journalToUnlock = journal
@@ -204,11 +177,7 @@ struct DashboardViewModelPasswordTests {
         mockKeychain.biometricAvailable = true
         mockKeychain.biometricAuthResult = false // User cancelled
 
-        let mockRepository = MockJournalRepository()
-        let viewModel = DashboardViewModel(
-            repository: mockRepository,
-            keychainManager: mockKeychain
-        )
+        let viewModel = DashboardViewModel(keychainManager: mockKeychain)
 
         let journal = Journal(name: "Test Journal")
         viewModel.journalToUnlock = journal
@@ -228,11 +197,7 @@ struct DashboardViewModelPasswordTests {
         let mockKeychain = MockKeychainManager()
         mockKeychain.biometricAvailable = true
 
-        let mockRepository = MockJournalRepository()
-        let viewModel = DashboardViewModel(
-            repository: mockRepository,
-            keychainManager: mockKeychain
-        )
+        let viewModel = DashboardViewModel(keychainManager: mockKeychain)
 
         let journal = Journal(name: "Test Journal")
         viewModel.journalToUnlock = journal
@@ -254,11 +219,7 @@ struct DashboardViewModelPasswordTests {
     func testVerifyPasswordForSettings_Success() async throws {
         // Given
         let mockKeychain = MockKeychainManager()
-        let mockRepository = MockJournalRepository()
-        let viewModel = DashboardViewModel(
-            repository: mockRepository,
-            keychainManager: mockKeychain
-        )
+        let viewModel = DashboardViewModel(keychainManager: mockKeychain)
 
         let journal = Journal(name: "Test Journal")
         try mockKeychain.savePassword("password123", for: journal.id.uuidString)
@@ -278,11 +239,7 @@ struct DashboardViewModelPasswordTests {
     func testVerifyPasswordForSettings_TracksFailedAttempts() async throws {
         // Given
         let mockKeychain = MockKeychainManager()
-        let mockRepository = MockJournalRepository()
-        let viewModel = DashboardViewModel(
-            repository: mockRepository,
-            keychainManager: mockKeychain
-        )
+        let viewModel = DashboardViewModel(keychainManager: mockKeychain)
 
         let journal = Journal(name: "Test Journal")
         try mockKeychain.savePassword("correct", for: journal.id.uuidString)
@@ -304,46 +261,43 @@ struct DashboardViewModelPasswordTests {
     func testDeleteJournal_CleansUpPassword() async throws {
         // Given
         let mockKeychain = MockKeychainManager()
-        let mockRepository = MockJournalRepository()
-        let viewModel = DashboardViewModel(
-            repository: mockRepository,
-            keychainManager: mockKeychain
-        )
+        let viewModel = DashboardViewModel(keychainManager: mockKeychain)
+        let container = try ModelContainer(for: Journal.self, Log.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+        let context = ModelContext(container)
 
         let journal = Journal(name: "Test Journal")
         journal.isPasswordProtected = true
         try mockKeychain.savePassword("password123", for: journal.id.uuidString)
-        mockRepository.journals = [journal]
+        context.insert(journal)
+        try context.save()
 
         // When
-        viewModel.deleteJournal(journal)
+        viewModel.deleteJournal(journal, modelContext: context)
 
         // Then
         #expect(mockKeychain.deletePasswordCallCount == 1)
         #expect(mockKeychain.savedPasswords[journal.id.uuidString] == nil)
-        #expect(mockRepository.deleteCallCount == 1)
     }
 
     @Test("Deleting journal cleans up failed attempts and lockout state")
     func testDeleteJournal_CleansUpLockoutState() async throws {
         // Given
         let mockKeychain = MockKeychainManager()
-        let mockRepository = MockJournalRepository()
-        let viewModel = DashboardViewModel(
-            repository: mockRepository,
-            keychainManager: mockKeychain
-        )
+        let viewModel = DashboardViewModel(keychainManager: mockKeychain)
+        let container = try ModelContainer(for: Journal.self, Log.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+        let context = ModelContext(container)
 
         let journal = Journal(name: "Test Journal")
         journal.isPasswordProtected = true
-        mockRepository.journals = [journal]
+        context.insert(journal)
+        try context.save()
 
         // Set up lockout state
         viewModel.setFailedAttempts(5, for: journal.id)
         viewModel.setLockedJournal(journal.id)
 
         // When
-        viewModel.deleteJournal(journal)
+        viewModel.deleteJournal(journal, modelContext: context)
 
         // Then
         #expect(viewModel.failedAttempts[journal.id] == nil)
@@ -356,11 +310,7 @@ struct DashboardViewModelPasswordTests {
     func testCancelPasswordPrompt_CleansUpState() async throws {
         // Given
         let mockKeychain = MockKeychainManager()
-        let mockRepository = MockJournalRepository()
-        let viewModel = DashboardViewModel(
-            repository: mockRepository,
-            keychainManager: mockKeychain
-        )
+        let viewModel = DashboardViewModel(keychainManager: mockKeychain)
 
         let journal = Journal(name: "Test Journal")
         viewModel.journalToUnlock = journal
@@ -381,11 +331,7 @@ struct DashboardViewModelPasswordTests {
     func testCancelPasswordPrompt_PreservesJournalWhenNavigating() async throws {
         // Given
         let mockKeychain = MockKeychainManager()
-        let mockRepository = MockJournalRepository()
-        let viewModel = DashboardViewModel(
-            repository: mockRepository,
-            keychainManager: mockKeychain
-        )
+        let viewModel = DashboardViewModel(keychainManager: mockKeychain)
 
         let journal = Journal(name: "Test Journal")
         viewModel.journalToUnlock = journal
@@ -410,11 +356,7 @@ struct DashboardViewModelPasswordTests {
     func testCancelPasswordPromptForSettings_CleansUpState() async throws {
         // Given
         let mockKeychain = MockKeychainManager()
-        let mockRepository = MockJournalRepository()
-        let viewModel = DashboardViewModel(
-            repository: mockRepository,
-            keychainManager: mockKeychain
-        )
+        let viewModel = DashboardViewModel(keychainManager: mockKeychain)
 
         let journal = Journal(name: "Test Journal")
         viewModel.journalForSettings = journal

@@ -42,7 +42,7 @@ struct fieldnoteApp: App {
 
     var body: some Scene {
         WindowGroup {
-            DashboardViewWrapper()
+            DashboardView()
                 .onAppear {
                     // Disable animations during UI tests for faster, more reliable execution
                     if ProcessInfo.processInfo.arguments.contains("--uitesting") {
@@ -55,14 +55,5 @@ struct fieldnoteApp: App {
                 }
         }
         .modelContainer(sharedModelContainer)
-    }
-}
-
-struct DashboardViewWrapper: View {
-    @Environment(\.modelContext) private var modelContext
-    @Query private var journals: [Journal]
-
-    var body: some View {
-        DashboardView(modelContext: modelContext)
     }
 }

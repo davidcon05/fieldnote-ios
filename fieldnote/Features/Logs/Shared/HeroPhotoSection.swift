@@ -19,10 +19,12 @@ struct HeroPhotoSection: View {
     let mode: Mode
     let showGradientOverlay: Bool
     let showMetadata: Bool
+    let softDeletedPhotoURLs: Set<URL>
 
     let onPhotoSelect: ((Int) -> Void)?
     let onAddPhoto: (() -> Void)?
     let onDeletePhoto: ((Int) -> Void)?
+    let onRestorePhoto: ((Int) -> Void)?
 
     enum Mode {
         case readOnly
@@ -39,9 +41,11 @@ struct HeroPhotoSection: View {
         mode: Mode = .readOnly,
         showGradientOverlay: Bool = true,
         showMetadata: Bool = true,
+        softDeletedPhotoURLs: Set<URL> = [],
         onPhotoSelect: ((Int) -> Void)? = nil,
         onAddPhoto: (() -> Void)? = nil,
-        onDeletePhoto: ((Int) -> Void)? = nil
+        onDeletePhoto: ((Int) -> Void)? = nil,
+        onRestorePhoto: ((Int) -> Void)? = nil
     ) {
         self.photoURLs = photoURLs
         self.selectedPhotoIndex = selectedPhotoIndex
@@ -50,9 +54,11 @@ struct HeroPhotoSection: View {
         self.mode = mode
         self.showGradientOverlay = showGradientOverlay
         self.showMetadata = showMetadata
+        self.softDeletedPhotoURLs = softDeletedPhotoURLs
         self.onPhotoSelect = onPhotoSelect
         self.onAddPhoto = onAddPhoto
         self.onDeletePhoto = onDeletePhoto
+        self.onRestorePhoto = onRestorePhoto
     }
 
     var body: some View {
@@ -108,20 +114,50 @@ struct HeroPhotoSection: View {
                         )
                     }
 
-                    // Delete button overlay (only in editable mode, top-right)
+                    // Soft-deleted overlay (black sheet with red X)
+                    if mode == .editable,
+                       selectedPhotoIndex < photoURLs.count,
+                       softDeletedPhotoURLs.contains(photoURLs[selectedPhotoIndex]) {
+                        Rectangle()
+                            .fill(Color.black.opacity(0.85))
+                            .overlay {
+                                VStack(spacing: 12) {
+                                    Image(systemName: "xmark")
+                                        .font(.system(size: 64, weight: .bold))
+                                        .foregroundColor(.red)
+
+                                    Text("Deleted")
+                                        .font(.headline(20, weight: .bold))
+                                        .foregroundColor(.white)
+
+                                    Text("Will be removed when you save")
+                                        .font(.body(14))
+                                        .foregroundColor(.white.opacity(0.7))
+                                }
+                            }
+                    }
+
+                    // Delete/Restore button overlay (only in editable mode, top-right)
                     if mode == .editable {
+                        let isDeleted = selectedPhotoIndex < photoURLs.count &&
+                                       softDeletedPhotoURLs.contains(photoURLs[selectedPhotoIndex])
+
                         VStack {
                             HStack {
                                 Spacer()
                                 Button(action: {
-                                    onDeletePhoto?(selectedPhotoIndex)
+                                    if isDeleted {
+                                        onRestorePhoto?(selectedPhotoIndex)
+                                    } else {
+                                        onDeletePhoto?(selectedPhotoIndex)
+                                    }
                                 }) {
                                     ZStack {
                                         Circle()
-                                            .fill(Color.black.opacity(0.6))
+                                            .fill(isDeleted ? Color.green.opacity(0.9) : Color.black.opacity(0.6))
                                             .frame(width: 44, height: 44)
 
-                                        Image(systemName: "trash.fill")
+                                        Image(systemName: isDeleted ? "arrow.uturn.backward" : "trash.fill")
                                             .font(.system(size: 18))
                                             .foregroundColor(.white)
                                     }

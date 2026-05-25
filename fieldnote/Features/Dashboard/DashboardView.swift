@@ -317,16 +317,16 @@ struct DashboardView: View {
               } placeholder: {
                   themeGradientView
               }
-              .id("\(coverURL.absoluteString)-\(journal.lastModified.timeIntervalSince1970)")
-          } else if let firstMediaURL = journal.logs.first?.mediaURLs.first {
-              // First log's photo
+              .id("\(coverURL.absoluteString)-\(journal.id.uuidString)-\(journal.lastModified.timeIntervalSince1970)")
+          } else if let firstMediaURL = journal.logs.sorted(by: { $0.timestamp > $1.timestamp }).first?.mediaURLs.first {
+              // First log's photo (sorted by timestamp to get most recent)
               AsyncImage(url: firstMediaURL) { image in
                   image
                       .resizable()
               } placeholder: {
                   themeGradientView
               }
-              .id("\(firstMediaURL.absoluteString)-\(journal.lastModified.timeIntervalSince1970)")
+              .id("\(firstMediaURL.absoluteString)-\(journal.id.uuidString)-\(journal.lastModified.timeIntervalSince1970)")
           } else {
               // Empty journal fallback
               themeGradientView
@@ -386,6 +386,7 @@ struct DashboardView: View {
                               themeHeaderView
                           }
                       }
+                      .id("\(coverURL.absoluteString)-\(journal.lastModified.timeIntervalSince1970)")
                   } else if let firstMediaURL = journal.logs.sorted(by: { $0.timestamp > $1.timestamp }).first?.mediaURLs.first {
                       AsyncImage(url: firstMediaURL) { phase in
                           switch phase {
@@ -401,7 +402,7 @@ struct DashboardView: View {
                               themeHeaderView
                           }
                       }
-                      .id("\(firstMediaURL.absoluteString)-\(journal.lastModified.timeIntervalSince1970)")
+                      .id("\(firstMediaURL.absoluteString)-\(journal.id.uuidString)-\(journal.lastModified.timeIntervalSince1970)")
                   } else {
                       themeHeaderView
                   }

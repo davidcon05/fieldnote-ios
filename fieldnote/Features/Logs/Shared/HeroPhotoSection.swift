@@ -273,6 +273,8 @@ struct HeroPhotoSection: View {
 
                 // Then existing photos
                 ForEach(Array(photoURLs.enumerated()), id: \.offset) { index, url in
+                    let isDeleted = mode == .editable && softDeletedPhotoURLs.contains(url)
+
                     Button(action: {
                         onPhotoSelect?(index)
                     }) {
@@ -282,9 +284,11 @@ struct HeroPhotoSection: View {
                                 image
                                     .resizable()
                                     .aspectRatio(contentMode: .fill)
-                                    .frame(width: 72, height: 72)
+                                    .frame(width: isDeleted ? 68 : 72, height: isDeleted ? 68 : 72)
                                     .clipped()
                                     .cornerRadius(8)
+                                    .grayscale(isDeleted ? 1.0 : 0.0)
+                                    .opacity(isDeleted ? 0.5 : 1.0)
                                     .overlay(
                                         RoundedRectangle(cornerRadius: 8)
                                             .stroke(selectedPhotoIndex == index ? Color.primaryColor : Color.clear, lineWidth: 2)
@@ -292,7 +296,7 @@ struct HeroPhotoSection: View {
                             default:
                                 Rectangle()
                                     .fill(Color.surfaceContainerHigh)
-                                    .frame(width: 72, height: 72)
+                                    .frame(width: isDeleted ? 68 : 72, height: isDeleted ? 68 : 72)
                                     .cornerRadius(8)
                             }
                         }

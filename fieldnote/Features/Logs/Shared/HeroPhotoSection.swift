@@ -31,7 +31,9 @@ struct HeroPhotoSection: View {
         case editable
     }
 
-    private var heroImageHeight: CGFloat { 320 }
+    private var heroImageHeight: CGFloat {
+        UIScreen.main.bounds.height * 0.4  // 40% of screen height
+    }
 
     init(
         photoURLs: [URL],
@@ -81,8 +83,8 @@ struct HeroPhotoSection: View {
                             image
                                 .resizable()
                                 .scaledToFill()
-                                .frame(height: heroImageHeight)
                                 .frame(maxWidth: .infinity)
+                                .frame(height: heroImageHeight)
                                 .clipped()
                         case .failure:
                             Rectangle()

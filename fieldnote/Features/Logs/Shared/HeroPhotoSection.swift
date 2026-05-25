@@ -58,7 +58,7 @@ struct HeroPhotoSection: View {
     var body: some View {
         VStack(spacing: 8) {
             // Primary Media Display
-            if !photoURLs.isEmpty {
+            if !photoURLs.isEmpty, selectedPhotoIndex < photoURLs.count {
                 ZStack(alignment: .bottom) {
                     // Hero Photo
                     AsyncImage(url: photoURLs[selectedPhotoIndex]) { phase in
@@ -74,9 +74,9 @@ struct HeroPhotoSection: View {
                         case .success(let image):
                             image
                                 .resizable()
-                                .aspectRatio(contentMode: .fill)
-                                .frame(maxWidth: .infinity)
+                                .scaledToFill()
                                 .frame(height: heroImageHeight)
+                                .frame(maxWidth: .infinity)
                                 .clipped()
                         case .failure:
                             Rectangle()
@@ -92,6 +92,7 @@ struct HeroPhotoSection: View {
                             EmptyView()
                         }
                     }
+                    .id("\(photoURLs[selectedPhotoIndex].absoluteString)-\(selectedPhotoIndex)")
 
                     // Gradient overlay (optional)
                     if showGradientOverlay {

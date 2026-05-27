@@ -80,12 +80,15 @@ struct HeroPhotoSection: View {
                                     ProgressView()
                                 }
                         case .success(let image):
-                            image
-                                .resizable()
-                                .scaledToFill()
-                                .frame(maxWidth: .infinity)
-                                .frame(height: heroImageHeight)
-                                .clipped()
+                            GeometryReader { geometry in
+                                image
+                                    .resizable()
+                                    .scaledToFill()
+                                    .frame(width: .infinity, height: heroImageHeight)
+                                    .clipped()
+                            }
+                            .frame(height: heroImageHeight)
+                                
                         case .failure:
                             Rectangle()
                                 .fill(Color.surfaceContainerHigh)

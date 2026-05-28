@@ -24,6 +24,7 @@ struct LogDetailView: View {
     @State private var showingDeleteConfirmation = false
     @State private var deleteConfirmationText = ""
     @State private var selectedPhotoIndex: Int = 0
+    @State private var isMapExpanded = false
 
     var body: some View {
         ScrollView {
@@ -227,47 +228,68 @@ struct LogDetailView: View {
             sectionHeader(icon: "map", title: "Location Sync")
 
             if let lat = log.latitude, let lon = log.longitude {
-                ZStack(alignment: .bottom) {
-                    // Map preview
-                    Map(
-                        position: .constant(.region(MKCoordinateRegion(
-                            center: CLLocationCoordinate2D(latitude: lat, longitude: lon),
-                            span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
-                        )))
-                    ) {
-                        Marker("", coordinate: CLLocationCoordinate2D(latitude: lat, longitude: lon))
-                            .tint(Color.primaryColor)
-                    }
-                    .mapStyle(.hybrid)
-                    .frame(height: 200)
-                    .cornerRadius(12)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(Color.outlineVariant.opacity(0.3), lineWidth: 1)
-                    )
+                ZStack(alignment: .topTrailing) {
+                    ZStack(alignment: .bottom) {
+                        // Map preview
+                        Map(
+                            position: .constant(.region(MKCoordinateRegion(
+                                center: CLLocationCoordinate2D(latitude: lat, longitude: lon),
+                                span: MKCoordinateSpan(
+                                    latitudeDelta: isMapExpanded ? 0.005 : 0.01,
+                                    longitudeDelta: isMapExpanded ? 0.005 : 0.01
+                                )
+                            )))
+                        ) {
+                            Marker("", coordinate: CLLocationCoordinate2D(latitude: lat, longitude: lon))
+                                .tint(Color.primaryColor)
+                        }
+                        .mapStyle(.hybrid)
+                        .frame(height: isMapExpanded ? UIScreen.main.bounds.height / 2 : 200)
+                        .cornerRadius(12)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color.outlineVariant.opacity(0.3), lineWidth: 1)
+                        )
 
-                    // Info bar at bottom
-                    HStack {
-                        Text("SECTOR: FIELD")
-                            .font(.label(9, weight: .bold))
-                            .foregroundColor(.onSurfaceVariant)
-                            .tracking(1.5)
-
-                        Spacer()
-
-                        HStack(spacing: 4) {
-                            Image(systemName: "checkmark.circle.fill")
-                                .font(.system(size: 12))
-                                .foregroundColor(.primaryColor)
-                            Text("SYNCED")
+                        // Info bar at bottom
+                        HStack {
+                            Text("SECTOR: FIELD")
                                 .font(.label(9, weight: .bold))
                                 .foregroundColor(.onSurfaceVariant)
-                                .tracking(1.2)
+                                .tracking(1.5)
+
+                            Spacer()
+
+                            HStack(spacing: 4) {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .font(.system(size: 12))
+                                    .foregroundColor(.primaryColor)
+                                Text("SYNCED")
+                                    .font(.label(9, weight: .bold))
+                                    .foregroundColor(.onSurfaceVariant)
+                                    .tracking(1.2)
+                            }
                         }
+                        .padding(12)
+                        .background(Color.surfaceContainer.opacity(0.95))
+                        .cornerRadius(8, corners: [.bottomLeft, .bottomRight])
+                    }
+
+                    // Expand/Collapse button
+                    Button(action: {
+                        withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                            isMapExpanded.toggle()
+                        }
+                    }) {
+                        Image(systemName: isMapExpanded ? "arrow.down.right.and.arrow.up.left" : "arrow.up.left.and.arrow.down.right")
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundColor(.onPrimary)
+                            .frame(width: 36, height: 36)
+                            .background(Color.primaryColor)
+                            .cornerRadius(8)
+                            .shadow(color: Color.black.opacity(0.2), radius: 4, x: 0, y: 2)
                     }
                     .padding(12)
-                    .background(Color.surfaceContainer.opacity(0.95))
-                    .cornerRadius(8, corners: [.bottomLeft, .bottomRight])
                 }
                 .accessibilityElement(children: .contain)
                 .accessibilityIdentifier(LogDetailAccessibilityIdentifiers.gpsTelemetryCard)

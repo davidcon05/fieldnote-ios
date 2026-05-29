@@ -55,8 +55,8 @@ struct EditLogView: View {
         self.log = log
         self.journal = journal
 
-        // Initialize services
-        let apiKey = "e4fe2848d6d479aa409cdcf5937e7e7c"
+        // Initialize services - Read API key from Info.plist (populated by Config.xcconfig locally or Xcode Cloud environment variable)
+        let apiKey = Bundle.main.infoDictionary?["WEATHER_API_KEY"] as? String ?? ""
         self.weatherService = WeatherService(apiKey: apiKey)
         self.airQualityService = AirQualityService(apiKey: apiKey)
 

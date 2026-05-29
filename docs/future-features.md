@@ -1,7 +1,7 @@
 # Future Features - Organized by Theme
 
 **Current Version:** v1.0 MVP (100% Complete)
-**Last Updated:** 2026-05-25
+**Last Updated:** 2026-05-29
 
 ---
 
@@ -11,11 +11,9 @@
 2. [🔍 Search & Discovery](#search--discovery)
 3. [📸 Media & Photo Intelligence](#media--photo-intelligence)
 4. [🤖 AI & Machine Learning](#ai--machine-learning)
-5. [🗺️ Navigation & Location](#navigation--location)
-6. [🤝 Sharing & Collaboration](#sharing--collaboration)
-7. [☁️ Cloud Sync & Multi-User](#cloud-sync--multi-user)
-8. [🎨 UI/UX Polish](#uiux-polish)
-9. [🔬 Advanced Research Tools](#advanced-research-tools)
+5. [🤝 Sharing & Collaboration](#sharing--collaboration)
+6. [☁️ Cloud Sync & Multi-User](#cloud-sync--multi-user)
+7. [🔬 Advanced Research Tools](#advanced-research-tools)
 
 ---
 
@@ -94,37 +92,10 @@ var globalSearchResults: [Log] {
 
 ---
 
-### 2. Advanced Filtering
-**Priority:** ⭐⭐ Medium (v1.2)
-**Effort:** 1 week
-**Status:** Planned
-
-Expand filter options beyond just sort:
-
-**Dashboard Filters:**
-- Filter by password-protected vs. unprotected
-- Filter by log count (empty, 1-10, 11-50, 50+)
-- Filter by date modified (today, this week, this month)
-
-**Logs List Filters:**
-- Filter by date range (custom date picker)
-- Filter by weather conditions (clear, rain, clouds, fog)
-- Filter by air quality (Good, Moderate, Poor)
-- Filter by presence of photos/audio
-- Filter by altitude range
-- Filter by GPS location/coordinates
-
-#### Benefits
-- ✅ Find logs from specific field sessions
-- ✅ Compare weather patterns over time
-- ✅ Focus on logs with specific content types
-
----
-
 ## 📸 Media & Photo Intelligence
 
-### 3. Photo Metadata Extraction
-**Priority:** ⭐⭐⭐ High (v1.1)
+### 2. Photo Metadata Extraction
+**Priority:** ⭐⭐⭐ Very High (v1.1)
 **Effort:** 3-4 days
 **Status:** Planned
 
@@ -184,52 +155,7 @@ func extractMetadata(from image: UIImage) -> PhotoMetadata? {
 
 ---
 
-### 4. Species Tagging & Tracking
-**Priority:** ⭐⭐ Medium (v1.2)
-**Effort:** 5-7 days
-**Status:** Planned
-
-**Problem:** Users with "Birds Journal" or "Wildlife Journal" have no way to tag species and track sightings over time.
-
-**Solution:** Add tagging system to logs, leveraging photo metadata.
-
-#### Data Model
-```swift
-@Model
-class Log {
-    // ... existing fields
-    var tags: [String] = [] // e.g., ["Northern Flicker", "Woodpecker", "Bird"]
-}
-```
-
-#### UI Flow
-1. User adds bird photo to log
-2. App prompts: "🐦 Add species tag?"
-3. User types "Northern Flicker"
-4. Tag saved to log
-5. User can search by tag later: "Show all Northern Flicker sightings"
-
-#### Features
-- Manual tag input (user knows species name)
-- Tag autocomplete (suggest previously used tags)
-- Tag search (find all logs with tag X)
-- Tag statistics ("You've seen 47 species this year")
-- Filter by tag (show logs with specific species)
-
-#### Benefits
-- ✅ Track species over time
-- ✅ Build personal field guide
-- ✅ Discover patterns (migration, seasonal behavior)
-- ✅ Share species lists with researchers
-
-#### Phases
-- **v1.2:** Manual tagging, tag search, tag filters
-- **v1.3:** Tag statistics, tag timeline
-- **v2.0+:** AI species identification (see AI & Machine Learning section)
-
----
-
-### 5. Advanced Photo Features
+### 3. Advanced Photo Features
 **Priority:** ⭐ Low (v1.3+)
 **Effort:** 1-2 weeks
 **Status:** Future
@@ -253,7 +179,7 @@ class Log {
 
 ## 🤖 AI & Machine Learning
 
-### 6. Speech-to-Text Transcription
+### 4. Speech-to-Text Transcription
 **Priority:** ⭐⭐⭐ High (v1.0)
 **Effort:** 2 weeks
 **Status:** ✅ COMPLETED
@@ -283,10 +209,10 @@ Automatic speech-to-text transcription for audio memos using Apple's on-device S
 
 ---
 
-### 7. AI Species Identification
+### 5. AI Species Identification
 **Priority:** ⭐⭐ Medium (v2.0+)
 **Effort:** 2-3 weeks
-**Status:** Planned (research complete)
+**Status:** 🔄 **API Access In Progress** (wife working on iNaturalist approval)
 
 Automatic species identification from photos using computer vision and machine learning.
 
@@ -294,39 +220,40 @@ Automatic species identification from photos using computer vision and machine l
 Users manually tag species ("Northern Flicker"), but this requires expertise. Beginners struggle to identify species correctly.
 
 #### Solution
-AI-powered photo analysis that suggests species names with confidence scores.
+AI-powered photo analysis that suggests species names with confidence scores using iNaturalist Computer Vision API.
 
-#### Proposed APIs
+#### Current Status
+- ✅ Research complete
+- ✅ API documentation reviewed
+- 🔄 **Wife is working on getting iNaturalist API access**
+- ⏳ Waiting for approval (timeline: 2-4 weeks)
+- ⏳ Implementation ready to start once API access granted
 
-**Option A: iNaturalist API (Recommended)**
-- **Pros:**
-  - 55,000+ taxa in CV model
+#### Selected API: iNaturalist CV (Option A)
+- **Why chosen:**
+  - 55,000+ taxa in CV model (birds, plants, insects, mammals, fungi, etc.)
   - Community-verified data (millions of observations)
   - Free for non-commercial use
   - High accuracy (same engine as iNaturalist app)
-- **Cons:**
+  - Geographic context (uses GPS for better predictions)
+- **Requirements:**
   - Requires internet connection
-  - Rate limits apply
+  - Rate limits apply (~1000 requests/day on free tier)
+  - API access requires approval (in progress)
 - **Documentation:** https://github.com/inaturalist/inatVisionAPI
 
+#### Alternative Options (If iNaturalist Not Approved)
+
 **Option B: Merlin Bird ID API**
-- **Pros:**
-  - Cornell Lab of Ornithology (highly trusted)
-  - Optimized for North American birds
-  - Audio identification support (bird calls)
-- **Cons:**
-  - Birds only (not plants, insects, etc.)
-  - May require partnership/licensing
+- Cornell Lab of Ornithology (highly trusted)
+- Birds only (not plants, insects, etc.)
+- May require partnership/licensing
 
 **Option C: Custom CoreML Model**
-- **Pros:**
-  - 100% offline
-  - No API rate limits
-  - Uses device Neural Engine (fast, battery-efficient)
-- **Cons:**
-  - Requires training custom model
-  - Limited taxa (compared to cloud APIs)
-  - Maintenance burden (model updates)
+- 100% offline (no API needed)
+- Limited taxa (500-1000 common species)
+- Requires training custom model
+- Maintenance burden (model updates)
 
 #### UI Flow
 1. User adds photo to log
@@ -367,7 +294,7 @@ AI-powered photo analysis that suggests species names with confidence scores.
 
 ---
 
-### 8. Photo Analysis & Auto-Categorization (Future)
+### 6. Photo Analysis & Auto-Categorization (Future)
 **Priority:** ⭐ Low (v3.0+)
 **Effort:** 3-4 weeks
 **Status:** Concept only
@@ -391,72 +318,9 @@ Future AI capabilities for photo intelligence:
 
 ---
 
-## 🗺️ Navigation & Location
-
-### 9. Land Navigation (GPS-Guided Return)
-**Priority:** ⭐⭐⭐ High (v1.5)
-**Effort:** 2 days (MVP), 9 days (full feature)
-**Status:** Fully planned (spike complete)
-
-**Problem:** Field scientists need to return to previous observation sites 2km into backcountry. Want screen-off navigation to conserve battery.
-
-**Solution:** Navigate to previously logged GPS locations with audio callouts.
-
-#### Core Features (MVP - Phase 1)
-- Navigate to any log with GPS coordinates
-- Real-time distance tracking ("347 meters away")
-- Audio callouts ("500 meters", "100 meters", "Arrived")
-- Background GPS (screen off, phone in pocket)
-- Large distance counter overlay (glanceable)
-- Visual line connecting current position to target
-- Battery efficient: 6-10% per hour (vs 20-35% with screen on)
-
-#### Extended Features (Phase 2-3)
-- Drop custom waypoint pins (mark parking, camp, sample sites)
-- Bearing indicator with compass arrow
-- Breadcrumb trail polyline (visual path history)
-- Elevation gain/loss display
-- Navigation history
-
-#### Battery Analysis
-- Screen OFF + GPS: 6-10% per hour ✅ Sustainable for 4+ hours
-- Screen ON + GPS: 20-35% per hour ❌ Phone dies in ~3 hours
-- **Conclusion:** Background location is essential
-
-#### Implementation
-Uses MapKit + CoreLocation with `allowsBackgroundLocationUpdates = true`
-
-#### Phases
-- **v1.5 Phase 1:** Core navigation (2 days)
-- **v1.5 Phase 2:** Waypoint dropping (2 days)
-- **v1.5 Phase 3:** Enhanced UX (bearing, compass, breadcrumbs) (3 days)
-- **v1.5 Phase 4:** Polish & settings (2 days)
-
-**Total:** 9 days for full feature
-
-**Full Documentation:** `docs/research/navigation-feature-spike.md`
-
----
-
-### 10. Reverse Geocoding (GPS → Location Name)
-**Priority:** ⭐ Low (v1.3)
-**Effort:** 1-2 days
-**Status:** Future
-
-Convert GPS coordinates to human-readable location names.
-
-**Use Cases:**
-- Log title suggestions: "Observation at Eiffel Tower, Paris"
-- Log list display: "Paris, France" instead of "48.8584°N, 2.2945°E"
-- Search by location name: "Show all logs in Olympic National Park"
-
-**Implementation:** Use CoreLocation's `CLGeocoder`
-
----
-
 ## 🤝 Sharing & Collaboration
 
-### 11. Single-Entry Sharing (Export)
+### 7. Single-Entry Sharing (Export)
 **Priority:** ⭐⭐⭐ High (v1.5)
 **Effort:** 3-5 days
 **Status:** Planned
@@ -502,7 +366,7 @@ Button("Share") {
 }
 .sheet(isPresented: $showShareSheet) {
     ShareSheet(items: [
-        logShareService.exportAsFieldnoteFile(log),
+        logShareService.exportAsEcoJournalFile(log),
         logShareService.exportAsText(log),
         log.mediaURLs
     ])
@@ -518,176 +382,206 @@ Button("Share") {
 #### Phases
 - **v1.5:** Basic sharing (custom file, plain text, JSON)
 - **v1.6:** Rich HTML email (optional, for professional presentation)
-- **v2.0:** Cloud URL sharing (requires backend)
+- **v2.0:** Cloud URL sharing (requires CloudKit backend)
 
 ---
 
 ## ☁️ Cloud Sync & Multi-User
 
-### 12. Cloud Backup & Sync
+### 8. Cloud Backup & Sync
 **Priority:** ⭐⭐⭐ High (v2.0)
 **Effort:** 3-4 weeks
-**Status:** Planned (architecture documented)
+**Status:** Planned (architecture decided: CloudKit)
 
 **Problem:** Data loss if device breaks. Can't access journals from multiple devices.
 
-**Solution:** Cloud sync with Supabase backend.
+**Solution:** Cloud sync with Apple CloudKit (native iOS integration).
 
 #### Architecture
-- **Backend:** Supabase (PostgreSQL + Storage + Realtime + Auth)
+- **Backend:** CloudKit (Apple's cloud database service)
 - **Sync Model:** Offline-first (local primary, cloud backup)
-- **Auth:** Anonymous device ID → Optional Apple Sign In upgrade
-- **Conflict Resolution:** Last-write-wins
+- **Auth:** User's Apple ID (already signed into iCloud)
+- **Storage:** Uses user's iCloud storage (1GB free tier per user)
+- **Cost:** $0 for developer (users pay for their own iCloud if needed)
+- **Conflict Resolution:** CloudKit handles automatically
 
 #### Features
 - Automatic cloud backup (photos, audio, logs)
-- Multi-device sync (iPhone + iPad)
+- Multi-device sync (iPhone + iPad with same Apple ID)
 - Data recovery if device lost
 - Offline-first (works without internet, syncs when available)
+- Native iOS integration (zero third-party dependencies)
 
-#### Timeline
-- **Week 1:** Supabase learning & setup
-- **Week 2:** Backend implementation (DB, storage, functions)
-- **Week 3:** iOS client sync engine
-- **Week 4:** Testing & polish
+#### Security
+- End-to-end encryption for sensitive fields
+- Password-protected journals: encrypt notes before uploading to CloudKit
+- Only user (and invited collaborators) can access data
 
-**Full Documentation:** `docs/future-features.md` (Cloud Sync section)
+#### Why CloudKit (Not Supabase)
+- ✅ iOS-only app (no Android needed)
+- ✅ Zero backend cost/maintenance
+- ✅ 99% of iPhone users already signed into iCloud
+- ✅ Built-in sharing UI (familiar to users from Notes app)
+- ✅ Real-time sync handled by Apple
+- ✅ Automatic conflict resolution
+- ❌ Locked to Apple ecosystem (migration to Supabase possible in v3.0+ if Android needed)
+
+#### Real-Time Collaboration Details
+**What You Get:**
+- **Near real-time sync:** Changes appear within **30 seconds to 2 minutes**
+- **CloudKit Subscriptions:** App receives push notifications when data changes
+- **Background sync:** Updates download automatically without user action
+- **Offline support:** Changes sync when internet returns
+
+**What You DON'T Get:**
+- ❌ Instant character-by-character typing (like Google Docs)
+- ❌ Live cursor presence ("Alice is editing...")
+- ❌ Operational transforms
+- ⚠️ Last-write-wins conflict resolution (if both edit same log offline)
+
+**User Experience (Same as Apple Notes):**
+```
+You (iPhone):
+- Add log "Found Douglas Fir" at 9:00 AM
+- Syncs to CloudKit
+
+Your wife (iPad, 2 miles away):
+- Gets push notification at 9:01 AM
+- Her app auto-refreshes
+- She sees your new log within 1-2 minutes
+```
+
+**Is This Good Enough?**
+**YES** for field research because:
+- Field work is asynchronous (not typing at same time)
+- Offline-first is more important than instant sync
+- 30-second latency is fine for adding log entries
+- Unlikely two people edit same log simultaneously
+
+#### Implementation Phases
+- **Phase 1 (Week 1):** Enable CloudKit, basic backup (single device)
+- **Phase 2 (Week 2):** Multi-device sync (iPhone + iPad)
+- **Phase 3 (Week 3):** CloudKit sharing (collaborate on journals)
+- **Phase 4 (Week 4):** Security audit, encryption for password-protected journals
+
+#### Code Example
+```swift
+// Enable CloudKit in Xcode:
+// Target → Signing & Capabilities → + Capability → iCloud
+// Check: CloudKit, iCloud Documents
+
+import CloudKit
+
+class CloudSyncService {
+    let container = CKContainer.default()
+    let privateDB = CKContainer.default().privateCloudDatabase
+
+    // Backup journal to user's iCloud
+    func backupJournal(_ journal: Journal) async throws {
+        let record = CKRecord(recordType: "Journal")
+        record["name"] = journal.name
+        record["isPasswordProtected"] = journal.isPasswordProtected
+
+        // Encrypt sensitive data for password-protected journals
+        if journal.isPasswordProtected {
+            let encrypted = encrypt(journal.logs, key: journal.password)
+            record["encryptedData"] = encrypted
+        } else {
+            record["logs"] = journal.logs
+        }
+
+        try await privateDB.save(record)
+    }
+
+    // Set up real-time sync subscriptions
+    func setupSubscriptions() async throws {
+        let subscription = CKQuerySubscription(
+            recordType: "Journal",
+            predicate: NSPredicate(value: true),
+            options: .firesOnRecordUpdate
+        )
+
+        subscription.notificationInfo = CKSubscription.NotificationInfo()
+        subscription.notificationInfo?.shouldSendContentAvailable = true
+
+        try await privateDB.save(subscription)
+    }
+}
+```
+
+**Timeline:** 3-4 weeks total
+
+**Full Documentation:** `docs/research/CLOUDKIT_IMPLEMENTATION_PLAN.md` (to be created)
 
 ---
 
-### 13. Multi-User Journals (Team Collaboration)
+### 9. Multi-User Journals (Team Collaboration)
 **Priority:** ⭐⭐ Medium (v2.1)
 **Effort:** 2-3 weeks
-**Status:** Planned (architecture documented)
+**Status:** Planned (using CloudKit Sharing)
 
 **Problem:** Research teams can't collaborate on shared journals.
 
-**Solution:** Invite-based journal sharing (no traditional sign-in required).
+**Solution:** CloudKit native sharing (same UI as Apple Notes).
 
 #### How It Works
 1. User creates journal
-2. User taps "Share Journal" → Generates invite link
-3. Teammate taps link → Gets access to shared journal
-4. Both users see updates via cloud sync
-5. Role-based access: Owner, Editor, Viewer
+2. User taps "Share Journal" → Native iOS share sheet appears
+3. User selects contact (Messages, Email, AirDrop)
+4. Recipient taps link → "Accept invitation to Birds Journal?"
+5. Recipient accepts → Journal appears in their app automatically
+6. Both users see changes in real-time (CloudKit sync)
 
-#### Authentication Strategy
-- **Default:** Anonymous device ID (works immediately)
-- **Optional:** Upgrade to Apple Sign In (for account recovery)
-- **Fallback:** Email magic links (cross-platform migration)
+#### Authentication
+- Uses recipient's Apple ID (already signed into iCloud)
+- No separate account creation needed
+- No email verification needed
+
+#### Permissions (CloudKit Built-in)
+- **Owner:** Can edit + delete + invite others + revoke access
+- **Read-Write:** Can add/edit logs, cannot delete journal
+- **Read-Only:** Can view but not edit
 
 #### Features
-- Invite links with expiration
-- Granular permissions (owner, editor, viewer)
-- Activity feed ("Alice added a log 5 minutes ago")
-- Revoke access
-- Real-time collaboration (see teammates' changes)
+- Native iOS sharing UI (users already understand it)
+- Real-time collaboration (changes sync within 30 sec - 2 min)
+- Revoke access anytime
+- Works offline → Syncs when internet returns
+- Activity indicators ("Alice is editing...")
 
-#### Cross-Platform Considerations
-- **iOS:** Apple Sign In (primary), Email (fallback)
-- **Android (future):** Google Sign In (primary), Email (fallback)
-- **Account linking:** Same email → Link Apple ID + Google ID
+#### Code Example
+```swift
+import CloudKit
 
-**Full Documentation:** `docs/future-features.md` (Multi-User Collaboration section)
+Button("Share Journal") {
+    presentCloudKitShare(for: journal)
+}
 
----
+func presentCloudKitShare(for journal: Journal) {
+    let share = CKShare(rootRecord: journal.cloudKitRecord)
+    share[CKShare.SystemFieldKey.title] = journal.name
 
-## 🎨 UI/UX Polish
+    let controller = UICloudSharingController(share: share, container: .default())
+    controller.availablePermissions = [.allowReadWrite, .allowReadOnly]
+    present(controller, animated: true)
+}
+```
 
-### 14. Dashboard Card Variations
-**Priority:** ⭐ Low (v1.2)
-**Effort:** 2-3 days
-**Status:** Exploration needed
+#### Security
+- Only invited users can access
+- Invitation requires Apple ID authentication
+- Owner can revoke access anytime
+- Password-protected journals: Password NOT synced (stays local)
 
-Experiment with different card designs:
-- Elevation/shadow variations
-- Alternative layouts (list view vs grid)
-- Animation improvements
-- Interaction feedback
+**Timeline:** 2-3 weeks (after CloudKit backup is implemented)
 
-**Note:** Current design is solid. Test with real data first before changing.
-
----
-
-### 15. Dark Mode Optimization
-**Priority:** ⭐ Low (v1.2)
-**Effort:** 2-3 days
-**Status:** System dark mode works, but not optimized
-
-Enhance dark mode experience:
-- Optimize colors for OLED (true black backgrounds)
-- Adjust photo contrast in dark mode
-- Test map view in dark mode (may need different pin colors)
-
----
-
-### 16. Haptic Feedback
-**Priority:** ⭐ Low (v1.3)
-**Effort:** 1 day
-**Status:** Minimal haptics currently
-
-Add subtle haptic feedback:
-- Button taps
-- Delete confirmations
-- GPS lock acquired
-- Weather data fetched
-- Log saved
-
-**Implementation:** Use `UIImpactFeedbackGenerator`
-
----
-
-### 17. Animations & Transitions
-**Priority:** ⭐ Low (v1.3)
-**Effort:** 2-3 days
-**Status:** Basic animations work
-
-Polish animations:
-- Smoother card transitions
-- Hero animations (photo expands when tapped)
-- Loading states (shimmer effects)
-- Pull-to-refresh animations
-
----
-
-### 18. Empty States
-**Priority:** ⭐ Low (v1.2)
-**Effort:** 1 day
-**Status:** Basic empty states exist
-
-Improve empty state messaging:
-- More helpful suggestions ("Tap + to create your first journal")
-- Contextual tips ("Search requires at least 2 characters")
-- Illustrations (optional, if budget allows)
+**Full Documentation:** `docs/research/CLOUDKIT_IMPLEMENTATION_PLAN.md` (to be created)
 
 ---
 
 ## 🔬 Advanced Research Tools
 
-### 19. Data Export (CSV, PDF Reports)
-**Priority:** ⭐⭐ Medium (v1.6)
-**Effort:** 1 week
-**Status:** Future
-
-**Problem:** Researchers need to export data for analysis in Excel, R, Python.
-
-**Solution:** Export logs as CSV or generate PDF reports.
-
-#### Export Formats
-- **CSV:** All logs with GPS, weather, notes, timestamps
-- **PDF Report:** Professional formatted document with photos
-- **GeoJSON:** For GIS software (QGIS, ArcGIS)
-- **KML:** For Google Earth
-
-#### Use Cases
-- Submit field data to professor
-- Import into statistical software
-- Share with collaborators (non-app users)
-- Archive for publications
-
----
-
-### 20. Weather Data Refresh During Edits
+### 10. Weather Data Refresh During Edits
 **Priority:** ⭐ Low (v1.5)
 **Effort:** 2-3 days
 **Status:** Current behavior: Weather NOT refreshed on edit
@@ -717,22 +611,7 @@ Button("Refresh Weather Data") {
 
 ---
 
-### 21. Active Journal Indicators
-**Priority:** ⭐ Low (v2.0 - Requires cloud sync)
-**Effort:** 2-3 days
-**Status:** Future
-
-Show "ACTIVE" badge on journals with recent activity (last hour).
-
-**Use Cases:**
-- Team collaboration: See which journals colleagues are using
-- Personal tracking: Quick visual of today's fieldwork
-
-**Requires:** Cloud sync (to detect teammate activity)
-
----
-
-### 22. Offline Map Tiles
+### 11. Offline Map Tiles
 **Priority:** ⭐ Low (v1.6)
 **Effort:** 1 week
 **Status:** Future
@@ -749,69 +628,33 @@ Show "ACTIVE" badge on journals with recent activity (last hour).
 
 ---
 
-### 23. LiDAR Measurements (iPhone Pro Only)
-**Priority:** ⭐ Low (v3.0)
-**Effort:** 2-3 weeks
-**Status:** Far future
+## 🎯 Quick Reference: Feature Summary
 
-Use iPhone Pro's LiDAR scanner for measurements:
-- Distance measurement (tree height)
-- Area measurement (soil patch size)
-- 3D scanning (rock formations, tree trunks)
+### High Priority (v1.1-v1.5)
+1. **Global search** - Search across all journals (2-3 days)
+2. **Photo metadata extraction** - Auto-populate from EXIF (3-4 days)
+3. **Single-entry sharing** - Export logs via Messages/AirDrop (3-5 days)
 
-**Requires:** ARKit integration
+### Major Features (v2.0+)
+4. **Cloud backup & sync** - CloudKit, multi-device support (3-4 weeks)
+5. **AI species identification** - iNaturalist API (2-3 weeks) - Wife working on access
+6. **Multi-user collaboration** - CloudKit Sharing (2-3 weeks)
 
----
+### Medium Priority
+7. **Advanced photo features** - Full-screen viewer, annotations (1-2 weeks)
+8. **Photo AI categorization** - Auto-detect types, quality (3-4 weeks)
 
----
-
-## 🎯 Quick Reference: Feature Summary by Category
-
-### 🔍 Search & Discovery
-- **Global search** - Find logs across all journals (2-3 days)
-- **Advanced filters** - Filter by date, weather, tags, GPS (1 week)
-
-### 📸 Media & Photo Intelligence
-- **Photo metadata extraction** - Auto-populate GPS/time from photos (3-4 days)
-- **Species tagging** - Manual tag system for tracking species (5-7 days)
-- **Advanced photo features** - Full-screen viewer, annotations, overlays (1-2 weeks)
-
-### 🤖 AI & Machine Learning
-- ✅ **Speech-to-text** - Already shipped in v1.0!
-- **AI species identification** - Auto-identify species from photos (2-3 weeks)
-- **Photo AI categorization** - Auto-detect photo types, quality analysis (3-4 weeks)
-
-### 🗺️ Navigation & Location
-- **Land navigation** - Navigate back to logged GPS locations (9 days)
-- **Reverse geocoding** - GPS → Location names (1-2 days)
-
-### 🤝 Sharing & Collaboration
-- **Single-entry sharing** - Export individual logs via Messages/AirDrop (3-5 days)
-
-### ☁️ Cloud Sync & Multi-User
-- **Cloud backup & sync** - Multi-device access, automatic backup (3-4 weeks)
-- **Multi-user journals** - Invite teammates to collaborate (2-3 weeks)
-
-### 🎨 UI/UX Polish
-- **Dark mode optimization** - OLED-friendly dark mode (2-3 days)
-- **Haptic feedback** - Tactile button feedback (1 day)
-- **Animations & transitions** - Smoother UI interactions (2-3 days)
-- **Empty states** - Better messaging for empty screens (1 day)
-- **Dashboard card variations** - Experiment with layouts (2-3 days)
-
-### 🔬 Advanced Research Tools
-- **CSV/PDF export** - Export data for analysis (1 week)
-- **Weather refresh** - Update weather data during edits (2-3 days)
-- **Active journal indicators** - See recent activity badges (2-3 days)
-- **Offline map tiles** - Download maps for offline use (1 week)
-- **LiDAR measurements** - Measure distances with iPhone Pro (2-3 weeks)
+### Low Priority
+9. **Weather refresh** - Update weather during edits (2-3 days)
+10. **Offline map tiles** - Download for offline use (1 week)
 
 ---
 
-**Last Updated:** 2026-05-25
+**Last Updated:** 2026-05-29
 **Document Owner:** David Contreras
 
 **Next Actions:**
-1. Launch v1.0 (see `docs/LAUNCH_CHECKLIST.md`)
-2. **Show categories to your wife** - Let her pick what features interest her most
-3. Prioritize implementation based on her feedback
+1. ✅ v1.0 Complete - Ready for TestFlight
+2. ⏳ Waiting for Apple Developer approval
+3. 🔄 Wife working on iNaturalist API access
+4. 📋 Prioritize v1.1 features based on beta feedback

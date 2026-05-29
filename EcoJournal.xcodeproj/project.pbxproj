@@ -27,6 +27,7 @@
 		01ACAB1F2FAA7C9D002C45CC /* EcoJournal.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = EcoJournal.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		01ACAB2E2FAA7CA0002C45CC /* EcoJournalTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = EcoJournalTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		01ACAB382FAA7CA0002C45CC /* EcoJournalUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = EcoJournalUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		019318F12FBF300000FF619B /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -199,7 +200,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 01ACAB1A2FAA7C9D002C45CC /* Build configuration list for PBXProject "fieldnote" */;
+			buildConfigurationList = 01ACAB1A2FAA7C9D002C45CC /* Build configuration list for PBXProject "EcoJournal" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -405,6 +406,7 @@
 		};
 		01ACAB432FAA7CA0002C45CC /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 019318F12FBF300000FF619B /* Config.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -416,9 +418,11 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = EcoJournal/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Eco Journal";
+				INFOPLIST_KEY_NSCameraUsageDescription = "EcoJournal needs camera access to capture photos during field observations";
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "Unlock password-protected journals with Face ID or Touch ID";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "We need your location to tag log entries";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "EcoJournal needs microphone access to record audio memos during field observation";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "EcoJournal needs photo library access to attach existing photos to log entries";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "EcoJournal uses speech recognition to transcribe your audio memos into searchable field notes";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -441,12 +445,13 @@
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
 		01ACAB442FAA7CA0002C45CC /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 019318F12FBF300000FF619B /* Config.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -458,9 +463,11 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = EcoJournal/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Eco Journal";
+				INFOPLIST_KEY_NSCameraUsageDescription = "EcoJournal needs camera access to capture photos during field observations";
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "Unlock password-protected journals with Face ID or Touch ID";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "We need your location to tag log entries";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "EcoJournal needs microphone access to record audio memos during field observation";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "EcoJournal needs photo library access to attach existing photos to log entries";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "EcoJournal uses speech recognition to transcribe your audio memos into searchable field notes";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -483,7 +490,7 @@
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};
@@ -504,7 +511,7 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/EcoJournal.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/EcoJournal";
 			};
 			name = Debug;
@@ -526,7 +533,7 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/EcoJournal.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/EcoJournal";
 			};
 			name = Release;
@@ -546,7 +553,7 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 				TEST_TARGET_NAME = EcoJournal;
 			};
 			name = Debug;
@@ -566,7 +573,7 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 				TEST_TARGET_NAME = EcoJournal;
 			};
 			name = Release;
@@ -574,7 +581,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		01ACAB1A2FAA7C9D002C45CC /* Build configuration list for PBXProject "fieldnote" */ = {
+		01ACAB1A2FAA7C9D002C45CC /* Build configuration list for PBXProject "EcoJournal" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				01ACAB402FAA7CA0002C45CC /* Debug */,

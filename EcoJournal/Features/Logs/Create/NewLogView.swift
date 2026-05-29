@@ -16,8 +16,8 @@ struct NewLogView: View {
     @StateObject private var locationManager = LocationManager()
 
     init(journal: Journal) {
-        // TODO: Move to proper config once xcconfig is linked
-        let apiKey = "e4fe2848d6d479aa409cdcf5937e7e7c"
+        // Read API key from Info.plist (populated by Config.xcconfig locally or Xcode Cloud environment variable)
+        let apiKey = Bundle.main.infoDictionary?["WEATHER_API_KEY"] as? String ?? ""
         let weatherService = WeatherService(apiKey: apiKey)
         let airQualityService = AirQualityService(apiKey: apiKey)
         let locationMgr = LocationManager()

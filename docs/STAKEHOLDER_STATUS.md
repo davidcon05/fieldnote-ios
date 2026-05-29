@@ -62,11 +62,14 @@
 - Which "nice to haves" can wait until v2.0?
 
 **Top candidates for v1.1-1.5:**
-- **Global search** (search across ALL journals at once) - 2 days
-- **Photo GPS extraction** (use photo's location, not current location) - 3 days
-- **Species tagging** (tag birds, plants, wildlife) - 5 days
-- **Land navigation** (navigate back to logged GPS points) - 9 days
-- **Export entries** (share via Messages, Email, AirDrop) - 3 days
+- **Global search** (search across ALL journals at once) - 2-3 days
+- **Photo GPS extraction** (use photo's location, not current location) - 3-4 days
+- **Single-entry sharing** (share logs via Messages, Email, AirDrop) - 3-5 days
+
+**Major features planned for v2.0+:**
+- **Cloud backup & sync** (CloudKit, multi-device support) - 3-4 weeks
+- **AI species identification** (iNaturalist API - wife working on access) - 2-3 weeks
+- **Multi-user collaboration** (CloudKit Sharing, real-time sync) - 2-3 weeks
 
 ### 2. Naming Decision (15 minutes)
 **Current name:** EcoJournal
@@ -145,10 +148,10 @@
 ## 🚧 Known Limitations (Trade-offs)
 
 ### What's NOT in v1.0
-- ❌ **Cloud backup** - Data only stored on device (coming in v2.0)
-- ❌ **Multi-device sync** - Can't access journals from iPad (coming in v2.0)
-- ❌ **Sharing journals** - Can't collaborate with teammates (coming in v2.1)
-- ❌ **Species identification** - No AI photo recognition (coming in v2.0+)
+- ❌ **Cloud backup** - Data only stored on device (coming in v2.0 via CloudKit)
+- ❌ **Multi-device sync** - Can't access journals from iPad (coming in v2.0 via CloudKit)
+- ❌ **Sharing journals** - Can't collaborate with teammates (coming in v2.1 via CloudKit Sharing)
+- ❌ **Species identification** - No AI photo recognition (coming in v2.0+ via iNaturalist API - wife working on access)
 - ❌ **Export to CSV/PDF** - Can't export data for research papers (coming in v1.6)
 
 ### Why These Are Okay for v1.0

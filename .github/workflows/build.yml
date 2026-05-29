@@ -7,7 +7,7 @@ on:
   workflow_call:
     inputs:
       test-target:
-        description: 'Test target to run (fieldnoteTests or fieldnoteUITests)'
+        description: 'Test target to run (EcoJournalTests or EcoJournalUITests)'
         required: true
         type: string
       enable-coverage:
@@ -54,8 +54,8 @@ jobs:
 
           # Build xcodebuild command
           CMD="xcodebuild test \
-            -project fieldnote.xcodeproj \
-            -scheme fieldnote \
+            -project EcoJournal.xcodeproj \
+            -scheme EcoJournal \
             -destination 'platform=iOS Simulator,name=${{ inputs.simulator }}' \
             -only-testing:${{ inputs.test-target }} \
             -resultBundlePath TestResults.xcresult"
@@ -66,7 +66,7 @@ jobs:
           fi
 
           # Add parallel testing flag for UI tests
-          if [ "${{ inputs.test-target }}" = "fieldnoteUITests" ]; then
+          if [ "${{ inputs.test-target }}" = "EcoJournalUITests" ]; then
             CMD="$CMD -parallel-testing-enabled NO"
           fi
 

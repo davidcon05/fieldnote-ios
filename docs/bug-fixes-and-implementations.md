@@ -1,6 +1,6 @@
 # Bug Fixes Log
 
-This document tracks bugs fixed in the fieldnote project to avoid repeating the same solutions.
+This document tracks bugs fixed in the EcoJournal project to avoid repeating the same solutions.
 
 ---
 
@@ -30,7 +30,7 @@ editedPhotoURLs.remove(at: index)  // Array changes size, index still wrong!
 ```
 
 **CORRECT Solution:**
-**File:** `fieldnote/Features/Logs/Edit/EditLogView.swift:489-507`
+**File:** `EcoJournal/Features/Logs/Edit/EditLogView.swift:489-507`
 
 ```swift
 private func deletePhoto(at index: Int) {
@@ -62,7 +62,7 @@ private func deletePhoto(at index: Int) {
 **UPDATE (2nd investigation):**
 The deletion logic above was necessary but NOT sufficient. The REAL crash was happening in the VIEW render:
 
-**File:** `fieldnote/Features/Logs/Shared/HeroPhotoSection.swift:61`
+**File:** `EcoJournal/Features/Logs/Shared/HeroPhotoSection.swift:61`
 ```swift
 // WRONG - crashes during render if index out of bounds
 if !photoURLs.isEmpty {
@@ -94,7 +94,7 @@ if !photoURLs.isEmpty, selectedPhotoIndex < photoURLs.count {
 - `.aspectRatio(contentMode: .fill)` combined with frame order caused inconsistencies
 
 **Solution:**
-**File:** `fieldnote/Features/Logs/Shared/HeroPhotoSection.swift:75-80`
+**File:** `EcoJournal/Features/Logs/Shared/HeroPhotoSection.swift:75-80`
 
 ```swift
 // WRONG - inconsistent sizing
@@ -137,7 +137,7 @@ journal.touch()  // Updates lastModified but AsyncImage still shows old image
 ```
 
 **CORRECT Solution:**
-**File:** `fieldnote/Features/Dashboard/DashboardView.swift:398`
+**File:** `EcoJournal/Features/Dashboard/DashboardView.swift:398`
 
 ```swift
 AsyncImage(url: firstMediaURL) { phase in
@@ -178,7 +178,7 @@ AsyncImage(url: firstMediaURL) { phase in
 - The fact that **only deleting fixes it** confirms it's cached image data
 
 **Solution:**
-**File:** `fieldnote/Features/Logs/Shared/HeroPhotoSection.swift:95`
+**File:** `EcoJournal/Features/Logs/Shared/HeroPhotoSection.swift:95`
 
 ```swift
 AsyncImage(url: photoURLs[selectedPhotoIndex]) { phase in

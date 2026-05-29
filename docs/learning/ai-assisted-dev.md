@@ -1,6 +1,6 @@
 # AI-Assisted Development Learnings
 
-This document captures insights, conventions, and "aha!" moments from building FieldNote with Claude Code.
+This document captures insights, conventions, and "aha!" moments from building EcoJournal with Claude Code.
 
 ---
 

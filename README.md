@@ -1,10 +1,10 @@
-# FieldNote
+# EcoJournal
 
 iOS field journal app for environmental science fieldwork. Built as an AI-assisted learning project.
 
 ## 🔋 Offline-First Design
 
-Field Note is designed to work **100% offline in remote field locations**. GPS uses satellites (not internet), and all data is stored locally.
+Eco Journal is designed to work **100% offline in remote field locations**. GPS uses satellites (not internet), and all data is stored locally.
 
 ### What Works Offline
 
@@ -60,10 +60,10 @@ Field Note is designed to work **100% offline in remote field locations**. GPS u
 ```bash
 # Clone the repo
 git clone <repo-url>
-cd fieldnote
+cd EcoJournal
 
 # Open in Xcode
-open fieldnote.xcodeproj
+open EcoJournal.xcodeproj
 
 # Build and run
 ⌘R
@@ -71,7 +71,7 @@ open fieldnote.xcodeproj
 
 ### Weather API Setup (Later)
 1. Sign up at [OpenWeatherMap](https://openweathermap.org/api)
-2. Create `fieldnote/Resources/Config.xcconfig`
+2. Create `EcoJournal/Resources/Config.xcconfig`
 3. Add: `WEATHER_API_KEY = your_key_here`
 4. **Never commit** (already in .gitignore)
 

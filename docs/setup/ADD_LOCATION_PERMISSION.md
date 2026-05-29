@@ -5,12 +5,12 @@
 1. **Open your project in Xcode**
 
 2. **In the left sidebar (Project Navigator):**
-   - Click on the **blue "fieldnote"** icon at the very top
+   - Click on the **blue "EcoJournal"** icon at the very top
    - This is your project file (not a folder, the blue document icon)
 
 3. **In the main editor area:**
    - You'll see two sections: PROJECT and TARGETS
-   - Under TARGETS, click **"fieldnote"** (should already be selected)
+   - Under TARGETS, click **"EcoJournal"** (should already be selected)
 
 4. **Click the "Info" tab** at the top
    - You'll see tabs: General, Signing & Capabilities, Resource Tags, **Info**, Build Settings, Build Phases, Build Rules
@@ -43,7 +43,7 @@ This adds an entry to your app's Info.plist that tells iOS:
 ## After Adding the Permission
 
 When you run the app and navigate to New Log:
-1. You should see an iOS alert: "fieldnote would like to access your location"
+1. You should see an iOS alert: "EcoJournal would like to access your location"
 2. Tap **"Allow While Using App"**
 3. The Location card should start showing GPS coordinates
 4. Weather data should fetch automatically
@@ -57,6 +57,6 @@ When you run the app and navigate to New Log:
 
 **If you accidentally denied permission:**
 1. Go to simulator Settings app
-2. Scroll to "fieldnote"
+2. Scroll to "EcoJournal"
 3. Tap Location
 4. Select "While Using App"

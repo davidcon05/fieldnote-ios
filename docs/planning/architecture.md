@@ -1,4 +1,4 @@
-# FieldNote Architecture
+# EcoJournal Architecture
 
 ## Terminology
 
@@ -366,10 +366,10 @@ class Entry {
 ## Project Structure (Complete)
 
 ```
-fieldnote/                              ← Git repo root
-├── fieldnote.xcodeproj/                ← Xcode project file
-├── fieldnote/                          ← Source code (visible in Xcode)
-│   ├── fieldnoteApp.swift             ← App entry point, SwiftData container
+EcoJournal/                              ← Git repo root
+├── EcoJournal.xcodeproj/                ← Xcode project file
+├── EcoJournal/                          ← Source code (visible in Xcode)
+│   ├── EcoJournalApp.swift             ← App entry point, SwiftData container
 │   ├── ContentView.swift               ← Generated (replace with DashboardView)
 │   ├── Item.swift                      ← Generated (can delete)
 │   ├── Models/

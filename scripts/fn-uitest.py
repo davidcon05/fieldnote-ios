@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-FieldNote UI Test Runner
+EcoJournal UI Test Runner
 Simplifies running Maestro tests locally by handling all the setup steps.
 
 Usage:
@@ -30,14 +30,14 @@ class Colors:
     BOLD = '\033[1m'
 
 
-class FieldNoteTestRunner:
+class EcoJournalTestRunner:
     def __init__(self, debug: bool = False):
         self.debug = debug
         self.project_root = Path(__file__).parent.parent
         self.build_path = self.project_root / "build"
-        self.app_path = self.build_path / "Build/Products/Debug-iphonesimulator/fieldnote.app"
+        self.app_path = self.build_path / "Build/Products/Debug-iphonesimulator/EcoJournal.app"
         self.maestro_dir = self.project_root / ".maestro"
-        self.bundle_id = "com.davidcon.fieldnote"
+        self.bundle_id = "com.davidcontreras.ecojournal"
         self.booted_simulator_udid: Optional[str] = None
         self.check_dependencies()
 
@@ -172,13 +172,13 @@ class FieldNoteTestRunner:
         return target_sim["udid"]
 
     def build_app(self):
-        """Build the FieldNote app"""
+        """Build the EcoJournal app"""
         self.log_section("🔨 Building App")
 
         self.run_command([
             "xcodebuild",
-            "-project", str(self.project_root / "fieldnote.xcodeproj"),
-            "-scheme", "fieldnote",
+            "-project", str(self.project_root / "EcoJournal.xcodeproj"),
+            "-scheme", "EcoJournal",
             "-sdk", "iphonesimulator",
             "-configuration", "Debug",
             "-derivedDataPath", str(self.build_path),
@@ -269,7 +269,7 @@ class FieldNoteTestRunner:
     def interactive_menu(self):
         """Show interactive menu"""
         while True:
-            self.log_section("FieldNote UI Test Runner")
+            self.log_section("EcoJournal UI Test Runner")
             print("1. 🚀 Run full test suite (build + install + test all)")
             print("2. 🔨 Build app only")
             print("3. 📱 Install app only")
@@ -407,7 +407,7 @@ class FieldNoteTestRunner:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="FieldNote UI Test Runner")
+    parser = argparse.ArgumentParser(description="EcoJournal UI Test Runner")
     parser.add_argument("--run-all", action="store_true", help="Build, install, and run all tests")
     parser.add_argument("--test", type=str, help="Run specific test file")
     parser.add_argument("--debug", action="store_true", help="Enable debug output")
@@ -416,7 +416,7 @@ def main():
 
     args = parser.parse_args()
 
-    runner = FieldNoteTestRunner(debug=args.debug)
+    runner = EcoJournalTestRunner(debug=args.debug)
 
     if args.run_all:
         runner.run_full_suite()

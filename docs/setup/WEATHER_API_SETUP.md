@@ -30,7 +30,7 @@ let weatherService = WeatherService(apiKey: "your_api_key_here")
 
 1. Copy `Config.xcconfig.example` to `Config.xcconfig`:
    ```bash
-   cd /Users/davidcontreras/AppleXCodeProjects/fieldnote
+   cd /Users/davidcontreras/AppleXCodeProjects/EcoJournal
    cp Config.xcconfig.example Config.xcconfig
    ```
 
@@ -43,7 +43,7 @@ let weatherService = WeatherService(apiKey: "your_api_key_here")
 
 4. In Xcode:
    - Select your project
-   - Select the `fieldnote` target
+   - Select the `EcoJournal` target
    - Go to Build Settings
    - Search for "User-Defined"
    - Add: `WEATHER_API_KEY = $(WEATHER_API_KEY)`

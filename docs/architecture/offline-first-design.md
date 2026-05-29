@@ -1,6 +1,6 @@
 # Offline-First Architecture
 
-**Core Principle:** Field Note is designed to work 100% offline. Internet connectivity is optional and only enhances the experience.
+**Core Principle:** Eco Journal is designed to work 100% offline. Internet connectivity is optional and only enhances the experience.
 
 ---
 
@@ -395,7 +395,7 @@ let weatherData = try await weatherService.fetchWeather(
 - ❌ No offline mode (can't use in remote areas)
 - ❌ Cloud-only storage (no internet = no data)
 
-**Field Note:**
+**Eco Journal:**
 - ✅ 100% offline-capable
 - ✅ Internet enhances but never required
 - ✅ Graceful degradation for optional features
@@ -419,7 +419,7 @@ Debug → Simulate Location → Custom Location (offline)
 ```bash
 # Full offline test
 1. Enable Airplane Mode
-2. Open Field Note app
+2. Open Eco Journal app
 3. Create new log
 4. Verify: GPS works (may take 30-60s)
 5. Verify: Weather shows error (graceful)
@@ -471,7 +471,7 @@ Settings → Developer → Network Link Conditioner
 
 ## Key Takeaways
 
-1. **Field Note is offline-first by design**
+1. **Eco Journal is offline-first by design**
 2. **GPS works 100% offline** (satellites, not internet)
 3. **Weather is optional enrichment**, never blocking
 4. **All core features work offline** (photos, audio, notes, storage)

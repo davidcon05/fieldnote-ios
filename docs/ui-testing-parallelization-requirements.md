@@ -8,7 +8,7 @@
 ## Current State
 
 - UI tests run **sequentially** on a single simulator
-- Test plan explicitly disables parallelization: `fieldnoteUITests.xctestplan`
+- Test plan explicitly disables parallelization: `EcoJournalUITests.xctestplan`
 - 37 UI tests across 6 test suites
 - Tests take ~5-10 minutes to run sequentially
 
@@ -82,7 +82,7 @@ func test_feature() {
     {
       "parallelizable" : true,  // Enable per-target
       "target" : {
-        "name" : "fieldnoteUITests"
+        "name" : "EcoJournalUITests"
       }
     }
   ]
@@ -104,7 +104,7 @@ func test_feature() {
 ```bash
 # Future parallel execution
 xcodebuild test \
-  -scheme fieldnote \
+  -scheme EcoJournal \
   -destination 'platform=iOS Simulator,name=iPhone 15 Pro' \
   -parallel-testing-enabled YES \
   -parallel-testing-worker-count 4 \
@@ -169,9 +169,9 @@ jobs:
       - name: Run ${{ matrix.test-suite }}
         run: |
           xcodebuild test \
-            -scheme fieldnote \
+            -scheme EcoJournal \
             -destination 'platform=iOS Simulator,name=iPhone 15 Pro' \
-            -only-testing:fieldnoteUITests/${{ matrix.test-suite }}
+            -only-testing:EcoJournalUITests/${{ matrix.test-suite }}
 ```
 
 #### 6. Performance Metrics to Track
@@ -307,12 +307,12 @@ The following tests are currently commented out because they require GPS/locatio
 ## References
 
 - Apple WWDC: Testing in Xcode (Parallelization)
-- Test plan: `fieldnoteUITests.xctestplan`
+- Test plan: `EcoJournalUITests.xctestplan`
 - Robot pattern skill: `~/.claude/skills/ui-testing-robot-pattern/`
-- Current test structure: `fieldnoteUITests/{Feature}/Tests/`
+- Current test structure: `EcoJournalUITests/{Feature}/Tests/`
 - Disabled tests:
-  - `fieldnoteUITests/Journal/Tests/JournalTests.swift` (lines 84-140) - 3 tests
-  - `fieldnoteUITests/Logs/Tests/LogsListTests.swift` (lines 57-120) - 5 tests
-  - `fieldnoteUITests/Map/Tests/MapTests.swift` (lines 57-94) - 3 tests
-  - `fieldnoteUITests/Logs/Tests/NewLogTests.swift` (lines 55-117) - 4 tests
+  - `EcoJournalUITests/Journal/Tests/JournalTests.swift` (lines 84-140) - 3 tests
+  - `EcoJournalUITests/Logs/Tests/LogsListTests.swift` (lines 57-120) - 5 tests
+  - `EcoJournalUITests/Map/Tests/MapTests.swift` (lines 57-94) - 3 tests
+  - `EcoJournalUITests/Logs/Tests/NewLogTests.swift` (lines 55-117) - 4 tests
   - **Total: 15 tests disabled** (awaiting mock infrastructure)

@@ -170,17 +170,17 @@ private func constantTimeCompare(_ a: String, _ b: String) -> Bool {
 ## Files Modified/Created
 
 ### Core Implementation
-- `fieldnote/Services/KeychainManager.swift` - Keychain + biometric service (196 lines)
-- `fieldnote/ViewModels/DashboardViewModel.swift` - Password unlock logic (329 lines)
-- `fieldnote/Views/Components/PasswordPromptSheet.swift` - Password entry UI
-- `fieldnote/Views/Components/JournalSettingsSheet.swift` - Password settings UI
-- `fieldnote/Views/DashboardView.swift` - Navigation integration
+- `EcoJournal/Services/KeychainManager.swift` - Keychain + biometric service (196 lines)
+- `EcoJournal/ViewModels/DashboardViewModel.swift` - Password unlock logic (329 lines)
+- `EcoJournal/Views/Components/PasswordPromptSheet.swift` - Password entry UI
+- `EcoJournal/Views/Components/JournalSettingsSheet.swift` - Password settings UI
+- `EcoJournal/Views/DashboardView.swift` - Navigation integration
 
 ### Testing Infrastructure
-- `fieldnoteTests/Mocks/MockKeychainManager.swift` - Keychain mock (102 lines)
-- `fieldnoteTests/Mocks/MockJournalRepository.swift` - Repository mock (87 lines)
-- `fieldnoteTests/ViewModels/DashboardViewModelPasswordTests.swift` - 17 tests (407 lines)
-- `fieldnoteTests/Services/KeychainManagerTests.swift` - 26 tests (380 lines)
+- `EcoJournalTests/Mocks/MockKeychainManager.swift` - Keychain mock (102 lines)
+- `EcoJournalTests/Mocks/MockJournalRepository.swift` - Repository mock (87 lines)
+- `EcoJournalTests/ViewModels/DashboardViewModelPasswordTests.swift` - 17 tests (407 lines)
+- `EcoJournalTests/Services/KeychainManagerTests.swift` - 26 tests (380 lines)
 
 **Total Lines of Code:** ~1,500 (including tests)
 

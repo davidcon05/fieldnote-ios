@@ -1,13 +1,13 @@
 #!/bin/bash
 
-# Install git hooks for the fieldnote project
+# Install git hooks for the EcoJournal project
 # Run this script after cloning the repository to set up pre-push validation
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 HOOKS_DIR="$PROJECT_ROOT/.git/hooks"
 
-echo "📦 Installing git hooks for fieldnote..."
+echo "📦 Installing git hooks for EcoJournal..."
 
 # Create pre-push hook
 cat > "$HOOKS_DIR/pre-push" << 'EOF'
@@ -19,7 +19,7 @@ cat > "$HOOKS_DIR/pre-push" << 'EOF'
 echo "🔨 Running pre-push hook: Building project..."
 
 # Build the project for iOS Simulator
-xcodebuild -scheme fieldnote -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' build 2>&1 | tee /tmp/xcodebuild-prepush.log
+xcodebuild -scheme EcoJournal -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' build 2>&1 | tee /tmp/xcodebuild-prepush.log
 
 BUILD_STATUS=${PIPESTATUS[0]}
 

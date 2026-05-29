@@ -1,4 +1,4 @@
-# FieldNote Design System
+# EcoJournal Design System
 
 ## Color Palette
 

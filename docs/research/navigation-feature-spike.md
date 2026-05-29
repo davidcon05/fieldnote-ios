@@ -9,7 +9,7 @@
 
 ## Executive Summary
 
-This spike investigates adding military-style land navigation to FieldNote for environmental scientists working in backcountry locations. The feature enables users to navigate to previously logged GPS locations or custom waypoint pins using real-time distance tracking, audio callouts, and visual guidance.
+This spike investigates adding military-style land navigation to EcoJournal for environmental scientists working in backcountry locations. The feature enables users to navigate to previously logged GPS locations or custom waypoint pins using real-time distance tracking, audio callouts, and visual guidance.
 
 **Key Finding:** MapKit + CoreLocation fully support this use case with screen-off background navigation, making multi-hour field sessions feasible with reasonable battery usage (6-10% per hour).
 
@@ -155,10 +155,10 @@ Xcode Target → Signing & Capabilities →
 **Info.plist Keys:**
 ```xml
 <key>NSLocationWhenInUseUsageDescription</key>
-<string>FieldNote needs your location to tag field observations and navigate to logged sites.</string>
+<string>EcoJournal needs your location to tag field observations and navigate to logged sites.</string>
 
 <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-<string>FieldNote can continue navigation even when the screen is locked, helping you reach your destination hands-free.</string>
+<string>EcoJournal can continue navigation even when the screen is locked, helping you reach your destination hands-free.</string>
 ```
 
 **LocationManager Updates:**
@@ -177,7 +177,7 @@ func stopNavigation() {
 ```
 
 **What User Sees:**
-1. Start navigation → Blue bar: "FieldNote is using your location"
+1. Start navigation → Blue bar: "EcoJournal is using your location"
 2. Lock screen (press side button) → Screen goes black, GPS continues
 3. Audio callouts play through lock screen: "500 meters"
 4. Unlock anytime → See updated distance, map shows current position
@@ -185,7 +185,7 @@ func stopNavigation() {
 
 **Privacy & Battery Control:**
 - Only track during active navigation (not always)
-- User controls via iOS Settings → FieldNote → Location
+- User controls via iOS Settings → EcoJournal → Location
 - Clear visual indicator when tracking active (blue bar)
 - Auto-stop after 8 hours (safety/battery protection)
 
@@ -865,7 +865,7 @@ LogDetailView(log: selectedLog) { log in
 - **Background location:**
   - Verify blue bar appears when navigating
   - Verify disappears when navigation cancelled
-  - Check iOS Settings → FieldNote → Location shows "While Using"
+  - Check iOS Settings → EcoJournal → Location shows "While Using"
 - **Battery monitoring:**
   - Start at 100% battery
   - Navigate for 1 hour with screen off
@@ -970,8 +970,8 @@ LogDetailView(log: selectedLog) { log in
 **Impact:** Screen must stay on, battery dies quickly, feature unusable
 **Probability:** Medium (users wary of "Always" permissions)
 **Mitigation:**
-- Clear explanation before prompting: "FieldNote only tracks during active navigation. This permission lets you lock your screen to save battery."
-- Fallback mode: If denied, show alert: "Navigation will require screen to stay on. This uses more battery. Change in Settings → FieldNote → Location"
+- Clear explanation before prompting: "EcoJournal only tracks during active navigation. This permission lets you lock your screen to save battery."
+- Fallback mode: If denied, show alert: "Navigation will require screen to stay on. This uses more battery. Change in Settings → EcoJournal → Location"
 - Graceful degradation: Continue navigation with "When In Use" (screen on)
 - Re-prompt option in settings: "Enable background navigation"
 - Educational tooltip on first navigation attempt
@@ -1139,7 +1139,7 @@ LogDetailView(log: selectedLog) { log in
 
 ### Competitive Analysis
 
-| Feature | FieldNote (Proposed) | AllTrails | Gaia GPS | OnX Backcountry | Apple Maps |
+| Feature | EcoJournal (Proposed) | AllTrails | Gaia GPS | OnX Backcountry | Apple Maps |
 |---------|---------------------|-----------|----------|-----------------|------------|
 | **Offline Maps** | ✅ Cached | ✅ Download | ✅ Download | ✅ Download | ⚠️ Limited |
 | **Offline GPS Tracking** | ✅ | ✅ | ✅ | ✅ | ❌ |
@@ -1148,10 +1148,10 @@ LogDetailView(log: selectedLog) { log in
 | **Custom Waypoints** | ✅ | ✅ | ✅ | ✅ | ✅ |
 | **Breadcrumb Trail** | ✅ (Phase 3) | ✅ | ✅ | ✅ | ❌ |
 | **Battery (screen off)** | 6-10%/hr (est.) | 5-8%/hr | 8-12%/hr | 6-10%/hr | N/A |
-| **Field Notes Integration** | ✅ Unique | ❌ | ❌ | ⚠️ Basic | ❌ |
+| **Eco Journals Integration** | ✅ Unique | ❌ | ❌ | ⚠️ Basic | ❌ |
 | **Cost** | Free (planned) | Free + Pro | $40/year | $30/year | Free |
 
-**FieldNote's Unique Value:**
+**EcoJournal's Unique Value:**
 - Only app that integrates navigation with field journal logging
 - Navigate back to locations where you logged observations
 - "Sample Site Alpha from yesterday" → instant navigation
@@ -1275,7 +1275,7 @@ LogDetailView(log: selectedLog) { log in
 
 ### Summary
 
-This navigation feature is **highly feasible** and **well-suited** to FieldNote's use case. MapKit + CoreLocation provide all necessary capabilities:
+This navigation feature is **highly feasible** and **well-suited** to EcoJournal's use case. MapKit + CoreLocation provide all necessary capabilities:
 
 - ✅ Real-time GPS tracking (offline)
 - ✅ Background location updates (screen off)

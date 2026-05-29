@@ -10,7 +10,7 @@ jobs:
     name: Run XCUITests on iOS
     uses: ./.github/workflows/build.yml
     with:
-      test-target: fieldnoteUITests
+      test-target: EcoJournalUITests
       enable-coverage: false
       simulator: 'iPhone 17 Pro'
       pre-boot-simulator: true

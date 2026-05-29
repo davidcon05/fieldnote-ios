@@ -1,6 +1,6 @@
 # TestFlight Distribution Guide
 
-**Purpose:** Distribute Field Note app to wife's iPhone for beta testing without App Store submission
+**Purpose:** Distribute Eco Journal app to wife's iPhone for beta testing without App Store submission
 **Audience:** Single user (wife) or small group (<100 testers)
 
 ---
@@ -169,10 +169,10 @@ If you don't want to pay $99/year, you have these options:
 3. Click "My Apps" → "+" → "New App"
 4. Fill in:
    - **Platform:** iOS
-   - **Name:** Field Note (or any name, can change later)
+   - **Name:** Eco Journal (or any name, can change later)
    - **Primary Language:** English (US)
-   - **Bundle ID:** Create new → `com.yourname.fieldnote`
-   - **SKU:** fieldnote-2026 (any unique string)
+   - **Bundle ID:** Create new → `com.yourname.EcoJournal`
+   - **SKU:** EcoJournal-2026 (any unique string)
    - **User Access:** Full Access
 
 5. Click "Create"
@@ -187,11 +187,11 @@ If you don't want to pay $99/year, you have these options:
 ### Step 3: Configure Xcode Project
 
 1. Open project in Xcode
-2. Select project in navigator → Select target "fieldnote"
+2. Select project in navigator → Select target "EcoJournal"
 3. **Signing & Capabilities** tab:
    - ✅ Automatically manage signing (checked)
    - Team: Select your Apple Developer team (shows after enrollment)
-   - Bundle Identifier: `com.yourname.fieldnote` (must match App Store Connect)
+   - Bundle Identifier: `com.yourname.EcoJournal` (must match App Store Connect)
 
 4. **General** tab:
    - Version: `1.0.0`
@@ -231,7 +231,7 @@ If you don't want to pay $99/year, you have these options:
 ### Step 5: Add Testers in App Store Connect
 
 1. Go to https://appstoreconnect.apple.com
-2. My Apps → Field Note → TestFlight
+2. My Apps → Eco Journal → TestFlight
 3. Click "Internal Testing" or "External Testing"
 
 **Internal Testing (Recommended for Wife):**
@@ -262,7 +262,7 @@ If you don't want to pay $99/year, you have these options:
 3. Install TestFlight app (free, by Apple)
 4. Open TestFlight app
 5. Sign in with same Apple ID used for invite
-6. Field Note app appears → Tap **Install**
+6. Eco Journal app appears → Tap **Install**
 7. App installs on Home Screen
 
 **Testing:**

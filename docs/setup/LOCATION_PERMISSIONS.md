@@ -5,8 +5,8 @@
 Since modern Xcode projects don't always have a standalone Info.plist file, add these keys via Xcode:
 
 ### Steps:
-1. Open `fieldnote.xcodeproj` in Xcode
-2. Select the `fieldnote` target
+1. Open `EcoJournal.xcodeproj` in Xcode
+2. Select the `EcoJournal` target
 3. Go to the **Info** tab
 4. Click the `+` button to add new entries
 
@@ -43,7 +43,7 @@ After adding permissions:
 ## Common Issues
 
 **Permission denied:**
-- Check Settings → Privacy & Security → Location Services → fieldnote
+- Check Settings → Privacy & Security → Location Services → EcoJournal
 - Reset privacy warnings: Settings → General → Transfer or Reset iPhone → Reset → Reset Location & Privacy
 
 **Location not updating:**

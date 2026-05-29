@@ -202,7 +202,7 @@ Text(log.title)
 ### Step 3: Verify Screen Object Matches
 
 ```swift
-// fieldnoteUITests/{Feature}/Screens/{Feature}Screen.swift
+// EcoJournalUITests/{Feature}/Screens/{Feature}Screen.swift
 var titleText: XCUIElement {
     app.staticTexts["logDetail.titleText"].firstMatch
 }

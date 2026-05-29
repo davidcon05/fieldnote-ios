@@ -279,7 +279,7 @@ Automatic speech-to-text transcription for audio memos using Apple's on-device S
 - ✅ Dictate scientific terms and species names
 - ✅ Search audio content by spoken words
 
-**File Reference:** `fieldnote/Services/AudioTranscriptionService.swift`
+**File Reference:** `EcoJournal/Services/AudioTranscriptionService.swift`
 
 ---
 
@@ -467,7 +467,7 @@ Convert GPS coordinates to human-readable location names.
 
 #### Export Formats
 
-**1. Custom .fieldnote File (For App Users)**
+**1. Custom .EcoJournal File (For App Users)**
 - Bundle log + media into single file
 - Recipient with app: Tap → Import to journal
 - Recipient without app: Receives text + attachments

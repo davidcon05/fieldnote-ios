@@ -1,4 +1,4 @@
-# Species Identification API Comparison for Field Note App
+# Species Identification API Comparison for Eco Journal App
 
 **Use Case:** Personal field note app for wife - needs reliable, unlimited (or generous) usage without hitting rate limits
 
@@ -323,5 +323,5 @@ for suggestion in cv_suggestions:
 
 ---
 
-**Document maintained for Field Note app development**
-**Project:** `/Users/davidcontreras/AppleXCodeProjects/fieldnote/`
+**Document maintained for Eco Journal app development**
+**Project:** `/Users/davidcontreras/AppleXCodeProjects/EcoJournal/`

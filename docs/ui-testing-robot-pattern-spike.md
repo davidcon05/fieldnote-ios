@@ -110,7 +110,7 @@ if ProcessInfo.processInfo.arguments.contains("--mock-location") {
 ### Recommended Organization
 
 ```
-fieldnoteUITests/
+EcoJournalUITests/
 ├── Robots/
 │   ├── DashboardRobot.swift
 │   ├── JournalRobot.swift
@@ -255,14 +255,76 @@ func testCreateJournal() {
 ## Alternatives Considered
 
 ### 1. Maestro (Current approach)
-**Pros**: Simple, readable, cross-platform
-**Cons**: Less IDE integration, harder to debug
+**Pros**:
+- Simple, readable YAML syntax (no code required)
+- Cross-platform (iOS, Android, Web)
+- Built-in flakiness tolerance and smart waiting
+- No compilation needed (instant feedback)
+- Open-source (Apache 2.0)
+- GitHub Actions integration (official support)
+
+**Cons**:
+- Less IDE integration, harder to debug (no Xcode debugger/breakpoints)
+- No reusable code for navigation/assertions (YAML scripts vs. native code libraries)
+- Cannot leverage language features (enums, protocols, type-safe helpers)
+- Limited abstraction capabilities compared to Robot Pattern
+- Third-party tool (not Apple's official solution)
 
 ### 2. XCUITest + Robot Pattern (Recommended)
 **Pros**: Native, great IDE support, debuggable, type-safe
 **Cons**: iOS-only, more verbose
 
-### 3. Appium
+### 3. Empirical Testing Results (EcoJournal App)
+
+We ran identical UI tests on EcoJournal using both frameworks to compare real-world performance and reliability.
+
+**Test Suite:** 3 tests (dashboard empty state, create journal, search journals)
+
+#### Local Performance (Mac)
+| Framework | Avg Time | Range | Variance | Success Rate |
+|-----------|----------|-------|----------|--------------|
+| **XCUITest** | **22.2s** | 21.9-22.7s | 0.8s | 100% (15/15) |
+| **Maestro** | **37.4s** | 34-41s | 7s | 100% (5/5) |
+
+**Key Finding:** XCUITest is **40% faster** locally with **8.7x lower variance** (more consistent).
+
+#### CI Performance (GitHub Actions)
+| Framework | Build Time | Test Time | Total Time | Success Rate |
+|-----------|-----------|-----------|------------|--------------|
+| **XCUITest** | 8+ min | ~22s | ~9 min | 100% (15/15) |
+| **Maestro** | 4-5 min | ~77s | ~6-7 min | **60% (3/5)** |
+
+**Key Findings:**
+- **XCUITest:** Higher build overhead (compilation), but 100% reliable
+- **Maestro:** Faster total time when successful, but **flaky in CI** (40% failure rate)
+- **Maestro Flakiness:** App crashes in `dashboard-empty-state` and `search-journals` tests
+- **XCUITest:** 2x faster test execution even in CI (22s vs 77s)
+
+#### Detailed Timing Breakdown (Local - Single Run)
+**XCUITest:**
+- `test_dashboard_showsEmptyState`: 6.5s
+- `test_createJournal_success`: 8.2s
+- `test_searchJournals_success`: 7.5s
+- **Total:** 22.2s
+
+**Maestro:**
+- `dashboard-empty-state.yaml`: 5-7s
+- `create-journal.yaml`: 13-18s
+- `search-journals.yaml`: 16-19s
+- **Total:** 34-41s
+
+#### Summary
+- **Speed:** XCUITest 40% faster locally, 2x faster in CI
+- **Reliability:** XCUITest 100% vs Maestro 60% (CI)
+- **Consistency:** XCUITest has 8.7x lower variance (more predictable)
+- **CI Overhead:** Maestro has faster build (4-5 min vs 8+ min) but unreliable tests
+- **Trade-off:** Maestro's faster setup time is offset by flakiness and slower test execution
+
+**Detailed Documentation:**
+- Full comparison: `/mobile-automation/docs/maestro-vs-xcuitest-comparison.md`
+- Performance baseline: `/mobile-automation/docs/maestro-performance-baseline.md`
+
+### 4. Appium
 **Pros**: Cross-platform
 **Cons**: Setup complexity, slower, less reliable
 
@@ -296,6 +358,6 @@ func testCreateJournal() {
 
 ## Conclusion
 
-UI testing with robot pattern is **highly feasible** for fieldnote. We can achieve ~80% test coverage without dealing with simulator limitations. The remaining 20% (camera, audio) can be tested manually or on physical devices.
+UI testing with robot pattern is **highly feasible** for EcoJournal. We can achieve ~80% test coverage without dealing with simulator limitations. The remaining 20% (camera, audio) can be tested manually or on physical devices.
 
 The robot pattern will keep tests maintainable as the app grows and aligns well with the feature package structure.

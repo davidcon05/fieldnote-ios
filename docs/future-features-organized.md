@@ -279,14 +279,121 @@ Automatic speech-to-text transcription for audio memos using Apple's on-device S
 - ✅ Dictate scientific terms and species names
 - ✅ Search audio content by spoken words
 
-**File Reference:** `fieldnote/Services/AudioTranscriptionService.swift`
+**File Reference:** `EcoJournal/Services/AudioTranscriptionService.swift`
+
+---
+
+### 6b. Multilingual Speech Transcription
+**Priority:** ⭐⭐ Medium (v1.2)
+**Effort:** 2-3 days
+**Status:** Future
+
+**Problem:** Current speech-to-text only transcribes in English. Users who work in multilingual environments or non-English speaking regions cannot transcribe audio memos in their native language.
+
+**Solution:** Add language selection support to allow users to transcribe audio in multiple languages using Apple's Speech framework.
+
+#### Features
+- Language picker in Settings or before recording
+- Support for 50+ languages (all languages supported by `SFSpeechRecognizer`)
+- Automatic language detection (optional, iOS 17+)
+- Per-journal language preference (e.g., Spanish for "Mexico Field Study" journal)
+- Display transcription language metadata on audio memos
+
+#### Supported Languages (Sample)
+- Spanish (es-ES, es-MX, es-US)
+- French (fr-FR, fr-CA)
+- German (de-DE)
+- Portuguese (pt-BR, pt-PT)
+- Italian (it-IT)
+- Japanese (ja-JP)
+- Chinese (zh-CN, zh-TW)
+- Korean (ko-KR)
+- Russian (ru-RU)
+- Arabic (ar-SA)
+- And 40+ more...
+
+#### Implementation
+```swift
+// AudioTranscriptionService.swift
+class AudioTranscriptionService {
+    var selectedLocale: Locale = Locale(identifier: "en-US") // Default
+
+    func setLanguage(_ languageCode: String) {
+        guard SFSpeechRecognizer.supportedLocales().contains(where: {
+            $0.identifier == languageCode
+        }) else {
+            print("Language not supported")
+            return
+        }
+        selectedLocale = Locale(identifier: languageCode)
+    }
+
+    func transcribeAudio(url: URL) async throws -> String {
+        let recognizer = SFSpeechRecognizer(locale: selectedLocale)
+        // ... existing transcription logic
+    }
+}
+```
+
+#### UI Design
+**Settings Screen:**
+```
+┌──────────────────────────────────────┐
+│ ⚙️ Settings                          │
+├──────────────────────────────────────┤
+│ 🗣️ Transcription Language            │
+│                                       │
+│ English (United States)         ✓    │
+│ Spanish (Spain)                      │
+│ Spanish (Mexico)                     │
+│ French (France)                      │
+│ Portuguese (Brazil)                  │
+│ German (Germany)                     │
+│ ...                                  │
+└──────────────────────────────────────┘
+```
+
+**Per-Journal Language (Optional v1.3):**
+```
+┌──────────────────────────────────────┐
+│ 📖 Mexico Field Study                │
+├──────────────────────────────────────┤
+│ Transcription Language: Spanish (MX) │
+│                                       │
+│ All audio memos in this journal will │
+│ be transcribed in Spanish            │
+└──────────────────────────────────────┘
+```
+
+#### Benefits
+- ✅ Accessible to non-English speakers
+- ✅ Better accuracy for native language speakers
+- ✅ Expands global market reach
+- ✅ Useful for multilingual research teams
+- ✅ Zero additional API costs (still on-device)
+
+#### Use Cases
+- Field biologists working in Spanish-speaking countries
+- International conservation teams (multilingual)
+- Personal travel journals in local languages
+- Academic research with non-English participants
+
+#### Technical Considerations
+- **Language Pack Download:** User must download language pack for offline use (~20-50 MB per language)
+- **Accuracy:** Native language recognition is more accurate than English for non-native speakers
+- **Storage:** Language metadata stored with each audio memo
+
+#### Phases
+- **v1.2:** Settings-level language selection (all journals use same language)
+- **v1.3:** Per-journal language preference
+- **v1.4:** Automatic language detection (iOS 17+, uses `SFSpeechRecognizer.requestAuthorization`)
 
 ---
 
 ### 7. AI Species Identification
 **Priority:** ⭐⭐ Medium (v2.0+)
-**Effort:** 2-3 weeks
-**Status:** Planned (research complete)
+**Effort:** 2-3 weeks (server-side), 4-6 weeks (with on-device model)
+**Status:** ⚠️ **REQUIRES APPROVAL** - iNaturalist CV API access not publicly available
 
 Automatic species identification from photos using computer vision and machine learning.
 
@@ -294,76 +401,96 @@ Automatic species identification from photos using computer vision and machine l
 Users manually tag species ("Northern Flicker"), but this requires expertise. Beginners struggle to identify species correctly.
 
 #### Solution
-AI-powered photo analysis that suggests species names with confidence scores.
+AI-powered photo analysis that suggests species names with confidence scores using iNaturalist Computer Vision API.
 
-#### Proposed APIs
+#### Architecture Decision: Server-Side First (v2.0)
 
-**Option A: iNaturalist API (Recommended)**
-- **Pros:**
-  - 55,000+ taxa in CV model
-  - Community-verified data (millions of observations)
-  - Free for non-commercial use
-  - High accuracy (same engine as iNaturalist app)
-- **Cons:**
-  - Requires internet connection
-  - Rate limits apply
-- **Documentation:** https://github.com/inaturalist/inatVisionAPI
+**Recommendation:** Start with server-side CV API, add on-device model later (v2.5) if needed.
 
-**Option B: Merlin Bird ID API**
-- **Pros:**
-  - Cornell Lab of Ornithology (highly trusted)
-  - Optimized for North American birds
-  - Audio identification support (bird calls)
-- **Cons:**
-  - Birds only (not plants, insects, etc.)
-  - May require partnership/licensing
+**Why Server-Side:**
+- ✅ Full 80,000+ taxa coverage (vs 500-1000 on-device)
+- ✅ Zero app bundle bloat (no 50-100MB model file)
+- ✅ Automatic model updates (no app resubmission)
+- ✅ Faster time to market (2-3 weeks vs 4-6 weeks)
+- ✅ Perfect fit for offline-first: capture offline → identify when signal returns
 
-**Option C: Custom CoreML Model**
-- **Pros:**
-  - 100% offline
-  - No API rate limits
-  - Uses device Neural Engine (fast, battery-efficient)
-- **Cons:**
-  - Requires training custom model
-  - Limited taxa (compared to cloud APIs)
-  - Maintenance burden (model updates)
+**Why NOT On-Device Initially:**
+- ❌ Limited taxa coverage (500-1000 common species only)
+- ❌ +50-100MB app bundle size
+- ❌ Model updates require app updates or complex download infrastructure
+- ❌ Longer development time (CoreML + Vision integration)
 
-#### UI Flow
-1. User adds photo to log
-2. App analyzes photo → Displays results:
+**Decision:** Build server-side first, gather real usage data, THEN decide if on-device is worth the investment.
+
+#### UI Flow (Server-Side)
+1. User takes photo in log entry (offline OK)
+2. Photo saved locally to device
+3. "Identify Species" button appears on photo
+4. User taps button when they have signal
+5. Loading state: "Analyzing photo..."
+6. Results appear:
    ```
-   🐦 Species Suggestions:
-   • Northern Flicker (87% confident)
-   • Red-bellied Woodpecker (12% confident)
-   • Gila Woodpecker (1% confident)
+   🌿 Species Suggestions:
+   • Douglas Fir (87% confident)
+     📍 47 observations within 50km
+   • Western Hemlock (11% confident)
+   • Noble Fir (2% confident)
+
+   [Add Tag] [Try Again]
    ```
-3. User taps species → Auto-adds tag to log
-4. User can manually override if incorrect
+7. User selects species → Auto-adds tag to log
+
+#### Implementation Phases
+
+**Phase 1: Server-Side CV API (v2.0) - 2-3 weeks**
+- iNaturalist `/v2/computervision/score_image` endpoint
+- PhotoIdentificationService with caching (24hr TTL)
+- SpeciesMatchCard UI component
+- Confidence score visualization
+- Integration into LogDetailView/EditLogView
+
+**Phase 2: Data Layer Enrichment (v2.1) - 1 week**
+- Nearby observations count ("47 sightings within 50km")
+- Similar species disambiguation ("Often confused with X")
+- Wikipedia summaries
+- Conservation status
+
+**Phase 3: Hybrid On-Device Model (v2.5) - 2-3 weeks (OPTIONAL)**
+- Download small CoreML model (500 taxa) on first launch
+- Try on-device first → Fallback to server for edge cases
+- Seek app's hybrid pattern
 
 #### Integration with Existing Features
 - Works with Species Tagging system (v1.2)
 - Auto-populates `Log.tags` array
-- Search works immediately (find all "Northern Flicker" logs)
+- Search works immediately (find all "Douglas Fir" logs)
+- Uses log's GPS coordinates (NOT current location) for better accuracy
 
 #### Technical Considerations
-- **Performance:** Run inference on background thread (don't block UI)
-- **Caching:** Cache predictions for 24 hours (avoid redundant API calls)
+- **Performance:** Background thread inference (don't block UI)
+- **Caching:** Cache results for 24 hours (avoid redundant API calls)
 - **Fallback:** If API fails, fallback to manual tagging
-- **Privacy:** User controls when photos are sent to API (opt-in)
-
-#### Phases
-- **v2.0 Phase 1:** iNaturalist API integration (cloud-based)
-- **v2.1 Phase 2:** Confidence threshold settings (only show >50% matches)
-- **v2.2 Phase 3:** CoreML model (offline mode for common species)
-- **v3.0:** Audio identification (bird calls using Merlin API)
+- **Privacy:** Explicit user action required ("Identify" button)
+- **Rate Limits:** ~1000 requests/day (free tier) - caching mitigates this
 
 #### Benefits
 - ✅ Lower barrier to entry (beginners can identify species)
 - ✅ Educational (learn species names from photos)
 - ✅ Faster logging (no manual typing)
 - ✅ Higher accuracy (AI assists human expertise)
+- ✅ Community validation (nearby observations build trust)
 
-**Full Research:** `docs/research/SPECIES_IDENTIFICATION_API_COMPARISON.md`
+**⚠️ CRITICAL: CV API Access Required**
+- API is NOT publicly available (requires approval from iNaturalist)
+- Contact: carrie@inaturalist.org
+- Timeline: Request after v1.0 launch (2-4 weeks post-launch)
+- Approval uncertain (fee-based restricted access program)
+- **Fallback:** On-device small model (500 taxa) or manual tagging
+
+**Full Implementation Plan:** `docs/research/SPECIES_ID_IMPLEMENTATION_PLAN.md`
+**API Access Guide:** `docs/research/INATURALIST_API_ACCESS_GUIDE.md` ⭐ **NEW**
+**Seek Contribution Strategy:** `docs/research/SEEK_CONTRIBUTION_STRATEGY.md` ⭐ **NEW**
+**API Research:** `docs/research/SPECIES_IDENTIFICATION_API_COMPARISON.md`
 
 ---
 
@@ -454,9 +581,109 @@ Convert GPS coordinates to human-readable location names.
 
 ---
 
+### 11. Map Point Clustering
+**Priority:** ⭐⭐ Medium (v1.3)
+**Effort:** 3-5 days
+**Status:** Future
+
+**Problem:** When viewing a journal with hundreds of log entries on a map, individual pins overlap and become cluttered, making it difficult to see and interact with specific locations.
+
+**Solution:** Group nearby map points into clusters with numbered badges. When zoomed out, show clusters; when zoomed in, show individual pins.
+
+#### Features
+- Cluster logs within 50 meters of each other
+- Display cluster count badge (e.g., "5" for 5 logs in cluster)
+- Auto-expand clusters when user zooms in
+- Tap cluster to zoom to bounding region
+- Dynamic clustering based on zoom level and coordinate density
+
+#### Implementation
+**Option 1: MapKit MKClusterAnnotation (iOS 11+)**
+```swift
+class LogAnnotation: NSObject, MKAnnotation {
+    var coordinate: CLLocationCoordinate2D
+    var log: Log
+
+    init(log: Log) {
+        self.log = log
+        self.coordinate = CLLocationCoordinate2D(
+            latitude: log.latitude ?? 0,
+            longitude: log.longitude ?? 0
+        )
+    }
+}
+
+// Enable clustering
+mapView.register(
+    MKMarkerAnnotationView.self,
+    forAnnotationViewWithReuseIdentifier: MKMapViewDefaultClusterAnnotationViewReuseIdentifier
+)
+
+// MKAnnotationView automatically groups annotations with same clusteringIdentifier
+```
+
+**Option 2: Custom Clustering Algorithm**
+```swift
+func clusterLogs(_ logs: [Log], radius: Double = 50.0) -> [LogCluster] {
+    var clusters: [LogCluster] = []
+    var processed: Set<UUID> = []
+
+    for log in logs {
+        guard !processed.contains(log.id) else { continue }
+
+        let nearbyLogs = logs.filter { otherLog in
+            log.distanceFrom(otherLog) < radius
+        }
+
+        clusters.append(LogCluster(logs: nearbyLogs))
+        processed.formUnion(nearbyLogs.map(\.id))
+    }
+
+    return clusters
+}
+```
+
+#### UI Design
+```
+Zoomed Out:
+┌─────────────────────────┐
+│                         │
+│    🟣 5   🟣 3          │  Clusters showing count
+│                         │
+│         🟣 12           │
+│                         │
+└─────────────────────────┘
+
+Zoomed In:
+┌─────────────────────────┐
+│                         │
+│    📍 📍 📍            │  Individual pins visible
+│       📍 📍            │
+│                         │
+└─────────────────────────┘
+```
+
+#### Benefits
+- ✅ Cleaner map visualization with many logs
+- ✅ Better performance (renders fewer annotations)
+- ✅ Improved UX for dense observation areas
+- ✅ Easy to see log concentration hotspots
+
+#### Use Cases
+- Research sites with repeated observations (100+ logs in 1 hectare)
+- Urban journaling (many entries in small geographic area)
+- Butterfly garden monitoring (multiple entries per square meter)
+
+#### Phases
+- **v1.3:** Basic clustering with MKClusterAnnotation
+- **v1.4:** Custom cluster styles (colored by journal, date range)
+- **v1.5:** Cluster analytics ("12 logs from May 2026")
+
+---
+
 ## 🤝 Sharing & Collaboration
 
-### 11. Single-Entry Sharing (Export)
+### 12. Single-Entry Sharing (Export)
 **Priority:** ⭐⭐⭐ High (v1.5)
 **Effort:** 3-5 days
 **Status:** Planned
@@ -467,7 +694,7 @@ Convert GPS coordinates to human-readable location names.
 
 #### Export Formats
 
-**1. Custom .fieldnote File (For App Users)**
+**1. Custom .EcoJournal File (For App Users)**
 - Bundle log + media into single file
 - Recipient with app: Tap → Import to journal
 - Recipient without app: Receives text + attachments
@@ -524,7 +751,7 @@ Button("Share") {
 
 ## ☁️ Cloud Sync & Multi-User
 
-### 12. Cloud Backup & Sync
+### 13. Cloud Backup & Sync
 **Priority:** ⭐⭐⭐ High (v2.0)
 **Effort:** 3-4 weeks
 **Status:** Planned (architecture documented)

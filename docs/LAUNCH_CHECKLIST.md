@@ -23,12 +23,12 @@
 - [ ] **Final name chosen:** _________________ (Options: FieldJournal, Chronicle, Daybook, Observation)
 - [ ] Search App Store to confirm name is available
 - [ ] Search Google to check domain availability (for future website)
-- [ ] Decide if keeping "fieldnote" or rebranding entirely
+- [ ] Decide if keeping "EcoJournal" or rebranding entirely
 
-#### If Rebranding from "fieldnote":
+#### If Rebranding from "EcoJournal":
 - [ ] Update Xcode project name (Project Settings → Info → Display Name)
 - [ ] Update bundle identifier: `com.davidcontreras.[newname]`
-- [ ] Find/replace "fieldnote" in code comments and strings
+- [ ] Find/replace "EcoJournal" in code comments and strings
 - [ ] Update README.md and documentation
 - [ ] Update `.xcodeproj` file name (optional, cosmetic)
 
@@ -70,7 +70,7 @@ In App Store Connect → Your App → App Information → Capabilities:
 
 #### Configure Signing in Xcode
 - [ ] Open project in Xcode
-- [ ] Select project in navigator → Target: fieldnote
+- [ ] Select project in navigator → Target: EcoJournal
 - [ ] **Signing & Capabilities** tab
 - [ ] **Team:** Select your Apple Developer account
 - [ ] **Signing:** ✅ Automatically manage signing
@@ -93,7 +93,7 @@ In App Store Connect → Your App → App Information → Capabilities:
   Name: TestFlight Deployment
   Trigger: On push to 'main' branch
   Actions:
-    ☑ Run Unit Tests (fieldnoteTests)
+    ☑ Run Unit Tests (EcoJournalTests)
     ☐ Run UI Tests (skip to save compute time)
     ☑ Archive
     ☑ Upload to TestFlight (Internal Testing)

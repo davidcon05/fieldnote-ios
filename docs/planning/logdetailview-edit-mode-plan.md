@@ -7,7 +7,7 @@
 
 ## Executive Summary
 
-Currently, FieldNote has two separate views:
+Currently, EcoJournal has two separate views:
 - **LogDetailView** - Read-only display with "Edit" button that navigates to EditLogView
 - **EditLogView** - Full editing interface with all edit capabilities
 
@@ -29,7 +29,7 @@ Currently, FieldNote has two separate views:
 ## Implementation Strategy
 
 ### Phase 1: Add Edit Mode Toggle
-Add `@State var isEditing = false` and modify "Edit Field Note" button to toggle this instead of navigating to EditLogView.
+Add `@State var isEditing = false` and modify "Edit Eco Journal" button to toggle this instead of navigating to EditLogView.
 
 ### Phase 2: Add State Management
 Add all @State variables from EditLogView to manage edited content.
@@ -222,7 +222,7 @@ private var heroSection: some View {
 
 ---
 
-#### D. Field Notes Section (Lines 313-330)
+#### D. Eco Journals Section (Lines 313-330)
 
 **Current (View Mode):**
 ```swift
@@ -258,7 +258,7 @@ if isEditing {
     }
 } else {
     VStack(alignment: .leading, spacing: 12) {
-        sectionHeader(icon: "note.text", title: "Field Notes")
+        sectionHeader(icon: "note.text", title: "Eco Journals")
 
         Text(log.notes)
             .font(.body(16))
@@ -408,7 +408,7 @@ if isEditing {
 ### 4. Action Buttons Section (Lines 439-480)
 
 **Current:**
-- "Edit Field Note" button → navigates to EditLogView
+- "Edit Eco Journal" button → navigates to EditLogView
 - "Delete Log Entry" button
 
 **New:**
@@ -463,7 +463,7 @@ private var actionButtons: some View {
                 HStack(spacing: 8) {
                     Image(systemName: "square.and.pencil")
                         .font(.system(size: 18))
-                    Text("Edit Field Note")
+                    Text("Edit Eco Journal")
                         .font(.body(16, weight: .bold))
                 }
                 .foregroundColor(.onSurface)
@@ -723,7 +723,7 @@ NavigationLink(destination: LogDetailView(log: log, journal: journal)) {
 ---
 
 ### Phase 2: Action Buttons (15 min)
-- [ ] Update "Edit Field Note" button to set `isEditing = true`
+- [ ] Update "Edit Eco Journal" button to set `isEditing = true`
 - [ ] Add conditional rendering (edit mode shows Save/Cancel, view mode shows Edit/Delete)
 - [ ] Add `saveChanges()` method
 - [ ] Add `cancelEditing()` method
@@ -742,7 +742,7 @@ NavigationLink(destination: LogDetailView(log: log, journal: journal)) {
 
 ---
 
-### Phase 4: Field Notes (15 min)
+### Phase 4: Eco Journals (15 min)
 - [ ] Make notes section conditional (TextField in edit mode, Text in view mode)
 - [ ] Configure multi-line TextField with 6-10 line limit
 
@@ -836,7 +836,7 @@ NavigationLink(destination: LogDetailView(log: log, journal: journal)) {
 | 1. Setup | 30 min |
 | 2. Action Buttons | 15 min |
 | 3. Title & Timestamp | 20 min |
-| 4. Field Notes | 15 min |
+| 4. Eco Journals | 15 min |
 | 5. Photos | 30 min |
 | 6. Audio Memos | 45 min |
 | 7. GPS & Location | 30 min |
@@ -866,7 +866,7 @@ NavigationLink(destination: LogDetailView(log: log, journal: journal)) {
 ## Success Criteria
 
 **✅ Feature Complete When:**
-1. LogDetailView has functioning "Edit Field Note" button that toggles edit mode
+1. LogDetailView has functioning "Edit Eco Journal" button that toggles edit mode
 2. All 7 fields are editable in edit mode (title, timestamp, notes, photos, audio, GPS, weather)
 3. Audio playback works in both view and edit modes
 4. Save Changes applies all edits to log

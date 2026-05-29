@@ -129,7 +129,7 @@
 1. Xcode → Product → Xcode Cloud → Create Workflow
 2. Connect GitHub repo (authorize once)
 3. Choose workflow triggers (push, pull request, tag)
-4. Select build scheme (fieldnote)
+4. Select build scheme (EcoJournal)
 5. Enable TestFlight upload (automatic)
 6. Done! ✅
 
@@ -199,10 +199,10 @@ jobs:
       run: sudo xcode-select -s /Applications/Xcode_15.2.app
 
     - name: Build
-      run: xcodebuild -scheme fieldnote -destination 'platform=iOS Simulator,name=iPhone 15 Pro' build
+      run: xcodebuild -scheme EcoJournal -destination 'platform=iOS Simulator,name=iPhone 15 Pro' build
 
     - name: Run tests
-      run: xcodebuild -scheme fieldnote -destination 'platform=iOS Simulator,name=iPhone 15 Pro' test
+      run: xcodebuild -scheme EcoJournal -destination 'platform=iOS Simulator,name=iPhone 15 Pro' test
 ```
 
 **Step 2: Add TestFlight upload (optional)**
@@ -261,7 +261,7 @@ jobs:
 sudo gem install fastlane
 
 # Initialize in project
-cd /path/to/fieldnote
+cd /path/to/EcoJournal
 fastlane init
 
 # Create lanes (workflows)
@@ -271,15 +271,15 @@ default_platform(:ios)
 platform :ios do
   desc "Build and upload to TestFlight"
   lane :beta do
-    increment_build_number(xcodeproj: "fieldnote.xcodeproj")
-    build_app(scheme: "fieldnote")
+    increment_build_number(xcodeproj: "EcoJournal.xcodeproj")
+    build_app(scheme: "EcoJournal")
     upload_to_testflight
   end
 
   desc "Submit to App Store"
   lane :release do
     increment_version_number
-    build_app(scheme: "fieldnote")
+    build_app(scheme: "EcoJournal")
     upload_to_app_store(
       submit_for_review: true,
       automatic_release: true
@@ -305,7 +305,7 @@ fastlane release
 
 ---
 
-## Recommended Setup for Field Note
+## Recommended Setup for Eco Journal
 
 ### Phase 1: Manual Deployment (v1.0 Beta)
 **Complexity:** Low
@@ -494,10 +494,10 @@ platform :ios do
       key_content: ENV['APP_STORE_CONNECT_API_KEY_CONTENT']
     )
 
-    increment_build_number(xcodeproj: "fieldnote.xcodeproj")
+    increment_build_number(xcodeproj: "EcoJournal.xcodeproj")
 
     build_app(
-      scheme: "fieldnote",
+      scheme: "EcoJournal",
       export_method: "app-store"
     )
 
@@ -544,7 +544,7 @@ git push origin v1.0.0
 
 ---
 
-## Recommendation for Field Note
+## Recommendation for Eco Journal
 
 ### Your Use Case: Wife + Small Group (5-10 testers)
 

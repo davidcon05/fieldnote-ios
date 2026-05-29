@@ -246,7 +246,7 @@ EditLogView.swift (516 lines) includes:
 - RecordMemoCard → Shows existing audio with play/delete capability
 - GPSTelemetryCard → Shows stored GPS with "Edit Manually" button
 - WeatherDataCard → Shows stored weather with "CAPTURED AT [time]" label (read-only)
-- Field Notes → Pre-filled with existing notes
+- Eco Journals → Pre-filled with existing notes
 - "Finalize Entry" button → "Save Changes" button
 - Add "Delete Log" button at bottom (red, destructive)
 
@@ -1066,7 +1066,7 @@ protocol NavigationTarget {
 
 **Export Formats:**
 
-**1. Custom .fieldnote File (For App Users)**
+**1. Custom .EcoJournal File (For App Users)**
 ```swift
 // Bundle log data + media into single file
 struct FieldnoteExport: Codable {
@@ -1075,12 +1075,12 @@ struct FieldnoteExport: Codable {
     let mediaData: [MediaData]  // Base64-encoded images/audio
 }
 
-// Register app to handle .fieldnote files
-// Info.plist: CFBundleDocumentTypes for "com.yourcompany.fieldnote"
+// Register app to handle .EcoJournal files
+// Info.plist: CFBundleDocumentTypes for "com.yourcompany.EcoJournal"
 ```
 
 **User Experience:**
-- Recipient WITH app: Tap .fieldnote → "Import to Fieldnote" → Choose journal
+- Recipient WITH app: Tap .EcoJournal → "Import to Fieldnote" → Choose journal
 - Recipient WITHOUT app: Receives text + attachments (fallback)
 
 **2. Plain Text Export (Universal)**
@@ -1150,10 +1150,10 @@ Button("Share") {
 
 | Destination | With App | Without App |
 |-------------|----------|-------------|
-| **Messages** | .fieldnote → Import | Text + inline photos/audio |
-| **Email (share sheet)** | .fieldnote attachment | Plain text + attachments |
-| **AirDrop** | .fieldnote → Import | Folder with files |
-| **Files** | Save .fieldnote | Save text + media |
+| **Messages** | .EcoJournal → Import | Text + inline photos/audio |
+| **Email (share sheet)** | .EcoJournal attachment | Plain text + attachments |
+| **AirDrop** | .EcoJournal → Import | Folder with files |
+| **Files** | Save .EcoJournal | Save text + media |
 
 **Benefits:**
 - ✅ Zero backend needed
@@ -1209,7 +1209,7 @@ Button("Email") {
 **User Flow:**
 1. User taps "Share Link"
 2. App uploads log + media to cloud storage
-3. Generates shareable URL: `fieldnote.app/log/abc123`
+3. Generates shareable URL: `EcoJournal.app/log/abc123`
 4. Copy link or share via iOS share sheet
 5. Recipient opens URL → Web viewer or app import
 
@@ -1287,7 +1287,7 @@ let authResult = try await Auth.auth().signInAnonymously()
 
 **Invite Link Structure:**
 ```
-fieldnote.app/invite/abc123xyz?journal=journal-uuid&sender=device-id
+EcoJournal.app/invite/abc123xyz?journal=journal-uuid&sender=device-id
 ```
 
 **Backend Schema (Supabase Example):**
@@ -1497,7 +1497,7 @@ CREATE TABLE auth.identities (
 -- user_id: 123
 --   ├─ apple: john.doe@icloud.com
 --   ├─ google: john.doe@gmail.com
---   └─ email: john.doe@fieldnote.com
+--   └─ email: john.doe@EcoJournal.com
 ```
 
 **User flow for linking accounts:**
@@ -1658,7 +1658,7 @@ val authService = AuthService(
 
 **v1.5 (Single-Entry Sharing):**
 - Add native share sheet (no backend)
-- Export as .fieldnote files
+- Export as .EcoJournal files
 - No accounts needed
 
 **v2.0 (Multi-User + Cloud Sync - iOS Only):**
@@ -1809,7 +1809,7 @@ The user is right - **there are many layers beyond just Supabase:**
 
 - Day 1-2: Export functionality
   - LogShareService implementation
-  - .fieldnote file format (JSON + base64 media)
+  - .EcoJournal file format (JSON + base64 media)
   - Plain text export
   - JSON export
 - Day 2-3: Native share sheet integration

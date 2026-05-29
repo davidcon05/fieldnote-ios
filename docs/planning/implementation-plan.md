@@ -1,4 +1,4 @@
-# Field Note App - Implementation Plan
+# Eco Journal App - Implementation Plan
 
 ## Project Overview
 
@@ -291,7 +291,7 @@ struct Weather: Codable {
    - Record Memo card (placeholder for audio)
    - GPS Telemetry card with loading states
    - Weather Data card with environment metrics
-   - Field Notes text editor
+   - Eco Journals text editor
    - 10-second timeout for all API calls
    - Proper task lifecycle management (no infinite loops)
    - Temperature in Fahrenheit
@@ -408,7 +408,7 @@ struct Weather: Codable {
 ```bash
 - Open Xcode
 - Create new iOS App
-- Product Name: "FieldNote"
+- Product Name: "EcoJournal"
 - Interface: SwiftUI
 - Storage: SwiftData
 - Language: Swift
@@ -464,13 +464,13 @@ class Log {
 ```
 
 #### 4. Configure SwiftData Container
-**File:** `FieldNoteApp.swift`
+**File:** `EcoJournalApp.swift`
 ```swift
 import SwiftUI
 import SwiftData
 
 @main
-struct FieldNoteApp: App {
+struct EcoJournalApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
@@ -978,8 +978,8 @@ HStack {
 
 ### Project Structure
 ```
-FieldNote/
-├── FieldNoteApp.swift
+EcoJournal/
+├── EcoJournalApp.swift
 ├── Models/
 │   ├── Journal.swift
 │   ├── Entry.swift

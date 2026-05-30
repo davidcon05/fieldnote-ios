@@ -1,0 +1,16 @@
+//
+//  Config.xcconfig
+//  EcoJournal
+//
+//  Configuration file
+//  This file CAN be committed - it references environment variables, not secrets
+//
+
+// OpenWeatherMap API Key
+// Sign up at: https://openweathermap.org/api
+// Free tier: 1000 calls/day
+//
+// Set WEATHER_API_KEY environment variable:
+// - Locally: In Xcode scheme or export in shell
+// - CI: In Xcode Cloud environment variables
+WEATHER_API_KEY = ${WEATHER_API_KEY}

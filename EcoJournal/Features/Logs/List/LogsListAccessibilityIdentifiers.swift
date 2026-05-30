@@ -31,4 +31,21 @@ enum LogsListAccessibilityIdentifiers {
     static func compactLogCard(_ logID: String) -> String {
         "logsList.compactLogCard.\(logID)"
     }
+
+    // Featured Card Dropdown
+    static func featuredCard(_ index: Int) -> String {
+        "logsList.featuredCard.\(index)"
+    }
+    static func featuredCardChevron(_ index: Int) -> String {
+        "logsList.featuredCard.\(index).chevron"
+    }
+    static func featuredCardContent(_ index: Int) -> String {
+        "logsList.featuredCard.\(index).content"
+    }
+    static func featuredCardExpandedNotes(_ index: Int) -> String {
+        "logsList.featuredCard.\(index).expandedNotes"
+    }
+    static func featuredCardWeatherData(_ index: Int) -> String {
+        "logsList.featuredCard.\(index).weatherData"
+    }
 }

@@ -19,7 +19,6 @@ final class NewLogRobot: BaseRobot {
 
     @discardableResult
     func enterTitle(_ title: String) -> Self {
-        screen.titleField.scrollToElement()
         screen.titleField.enterText(title)
         return self
     }
@@ -27,14 +26,13 @@ final class NewLogRobot: BaseRobot {
     @discardableResult
     func enterNotes(_ notes: String) -> Self {
         screen.notesField
-            .scrollToElement() // Defaults: 1 attempt, .screen distance
+            .scrollToElement(distance: .search) // Defaults: 1 attempt, .screen distance
             .enterText(notes)
         return self
     }
 
     @discardableResult
     func tapAddPhoto() -> Self {
-        screen.addPhotoButton.scrollToElement()
         screen.addPhotoButton.tap()
         return self
     }
@@ -42,6 +40,15 @@ final class NewLogRobot: BaseRobot {
     @discardableResult
     func tapFinalizeEntry() -> Self {
         screen.finalizeButton.tap()
+        return self
+    }
+
+    @discardableResult
+    func dismissSaveConfirmationAlert() -> Self {
+        let alert = app.alerts.firstMatch
+        if alert.waitForExistence(timeout: 3) {
+            alert.buttons["OK"].tap()
+        }
         return self
     }
 

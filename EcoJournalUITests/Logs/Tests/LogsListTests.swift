@@ -37,6 +37,10 @@ final class LogsListTests: BaseUITest {
             .enterTitle(title)
             .enterNotes(notes)
             .tapFinalizeEntry()
+            .dismissSaveConfirmationAlert()
+
+        JournalRobot(app: app)
+            .tapLogsTab()
     }
 
     // MARK: - Empty State Tests
@@ -87,6 +91,25 @@ final class LogsListTests: BaseUITest {
     //     LogsListRobot(app: app)
     //         .searchFor("Eagle")
     //         .verifyLogExists(title: "Eagle Sighting")
+    // }
+
+    // MARK: - Dropdown Tests
+
+    // TODO: Re-enable once dropdown chevron is re-implemented
+    // Validates fix for nested button bug - chevron expands/collapses without navigation
+    // func test_featuredCards_expandAndCollapse_togglesContent() {
+    //     navigateToLogsTab()
+    //     createLog(title: "First Observation", notes: "Testing dropdown behavior")
+    //     createLog(title: "Second Observation", notes: "Testing dropdown behavior")
+    //
+    //     LogsListRobot(app: app)
+    //         .verifyLogExists(title: "First Observation", index: 0)
+    //         .verifyLogExists(title: "Second Observation", index: 1)
+    //         .verifyCardsCollapsed(indices: [0, 1])
+    //         .expandCards(indices: [0, 1])
+    //         .verifyCardsExpanded(indices: [0, 1])
+    //         .collapseCards(indices: [0, 1])
+    //         .verifyCardsCollapsed(indices: [0, 1])
     // }
 
     // MARK: - Navigation Tests

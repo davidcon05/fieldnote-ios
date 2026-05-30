@@ -25,7 +25,10 @@ final class JournalRobot: BaseRobot {
     /// Tap the Logs tab
     @discardableResult
     func tapLogsTab() -> Self {
+        XCTAssertTrue(screen.logsTab.waitForExistence(timeout: 10), "Logs tab should be visible before tapping")
         screen.logsTab.tap()
+        // Wait for navigation to complete
+        Thread.sleep(forTimeInterval: 1)
         return self
     }
 

@@ -135,16 +135,18 @@ struct LogsListView: View {
     private var logsList: some View {
         LazyVStack(spacing: 24) {
             ForEach(Array(filteredAndSortedLogs.enumerated()), id: \.element.id) { index, log in
-                Button {
-                    selectedLog = log
-                } label: {
-                    if index < 3 {
-                        FeaturedLogCardView(log: log, index: index)
-                    } else {
-                        CompactLogCardView(log: log)
-                    }
+                if index < 3 {
+                    FeaturedLogCardView(
+                        log: log,
+                        index: index,
+                        onTapCard: { selectedLog = log }
+                    )
+                } else {
+                    CompactLogCardView(log: log)
+                        .onTapGesture {
+                            selectedLog = log
+                        }
                 }
-                .buttonStyle(.plain)
             }
         }
         .padding(.horizontal, 24)
@@ -237,6 +239,7 @@ struct LogsListView: View {
 struct FeaturedLogCardView: View {
     let log: Log
     let index: Int
+    let onTapCard: () -> Void
 
     @State private var isExpanded = false
 
@@ -249,30 +252,33 @@ struct FeaturedLogCardView: View {
                 // Image section with circular chevron button
                 ZStack(alignment: .bottomTrailing) {
                     // Priority: Use actual log photos, then fallback to alternating color gradients
-                    if !log.mediaURLs.isEmpty, let firstPhotoURL = log.mediaURLs.first {
-                        // Use actual photo from log
-                        AsyncImage(url: firstPhotoURL) { phase in
-                            switch phase {
-                            case .success(let image):
-                                image
-                                    .resizable()
-                                    .scaledToFill()
-                                    .frame(height: logThumbnailHeight)
-                                    .clipped()
-                            case .failure(_), .empty:
-                                // Fallback to alternating gradient if photo fails to load
-                                alternatingGradient
-                                    .frame(height: logThumbnailHeight)
-                            @unknown default:
-                                alternatingGradient
-                                    .frame(height: logThumbnailHeight)
+                    Group {
+                        if !log.mediaURLs.isEmpty, let firstPhotoURL = log.mediaURLs.first {
+                            // Use actual photo from log
+                            AsyncImage(url: firstPhotoURL) { phase in
+                                switch phase {
+                                case .success(let image):
+                                    image
+                                        .resizable()
+                                        .scaledToFill()
+                                        .frame(height: logThumbnailHeight)
+                                        .clipped()
+                                case .failure(_), .empty:
+                                    // Fallback to alternating gradient if photo fails to load
+                                    alternatingGradient
+                                        .frame(height: logThumbnailHeight)
+                                @unknown default:
+                                    alternatingGradient
+                                        .frame(height: logThumbnailHeight)
+                                }
                             }
+                        } else {
+                            // No photos: use alternating gradient based on index
+                            alternatingGradient
+                                .frame(height: logThumbnailHeight)
                         }
-                    } else {
-                        // No photos: use alternating gradient based on index
-                        alternatingGradient
-                            .frame(height: logThumbnailHeight)
                     }
+                    .contentShape(Rectangle())
 
                     // Weather icon badge (top left)
                     HStack(spacing: 6) {
@@ -293,22 +299,25 @@ struct FeaturedLogCardView: View {
                     .cornerRadius(12)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                     .padding(12)
+                    .allowsHitTesting(false)
 
+                    // TODO: Re-implement chevron dropdown functionality
                     // Circular chevron button (bottom right, overlapping border)
-                    Button(action: { withAnimation(.spring(response: 0.3)) { isExpanded.toggle() } }) {
-                        ZStack {
-                            Circle()
-                                .fill(Color.white)
-                                .frame(width: 36, height: 36)
-                                .shadow(color: .black.opacity(0.15), radius: 4, x: 0, y: 2)
-
-                            Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundColor(.primaryColor)
-                        }
-                    }
-                    .buttonStyle(.plain)
-                    .offset(x: -12, y: 18) // Overlap border between image and content
+                    // Button(action: { withAnimation(.spring(response: 0.3)) { isExpanded.toggle() } }) {
+                    //     ZStack {
+                    //         Circle()
+                    //             .fill(Color.white)
+                    //             .frame(width: 36, height: 36)
+                    //             .shadow(color: .black.opacity(0.15), radius: 4, x: 0, y: 2)
+                    //
+                    //         Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+                    //             .font(.system(size: 14, weight: .semibold))
+                    //             .foregroundColor(.primaryColor)
+                    //     }
+                    // }
+                    // .buttonStyle(.plain)
+                    // .accessibilityIdentifier(LogsListAccessibilityIdentifiers.featuredCardChevron(index))
+                    // .offset(x: -12, y: 18) // Overlap border between image and content
                 }
 
                 // Content section
@@ -336,50 +345,49 @@ struct FeaturedLogCardView: View {
                                 .font(.body(14))
                                 .foregroundColor(.onSurfaceVariant)
                                 .lineSpacing(4)
+                                .accessibilityIdentifier(LogsListAccessibilityIdentifiers.featuredCardExpandedNotes(index))
 
                             Divider()
                                 .padding(.vertical, 4)
 
                             // Weather data
                             VStack(alignment: .leading, spacing: 8) {
-                                if let lat = log.latitude, let lon = log.longitude {
-                                    MetadataRow(
-                                        icon: "location.fill",
-                                        label: "Location",
-                                        value: String(format: "%.4f°, %.4f°", lat, lon)
-                                    )
-                                }
+                                MetadataRow(
+                                    icon: "location.fill",
+                                    label: "Location",
+                                    value: {
+                                        if let lat = log.latitude, let lon = log.longitude {
+                                            return String(format: "%.4f°, %.4f°", lat, lon)
+                                        }
+                                        return "--"
+                                    }()
+                                )
 
-                                if let weather = log.weather {
-                                    MetadataRow(
-                                        icon: "thermometer.medium",
-                                        label: "Temperature",
-                                        value: String(format: "%.0f°F", celsiusToFahrenheit(weather.temperature))
-                                    )
+                                MetadataRow(
+                                    icon: "thermometer.medium",
+                                    label: "Temperature",
+                                    value: log.weather.map { String(format: "%.0f°F", celsiusToFahrenheit($0.temperature)) } ?? "--"
+                                )
 
-                                    MetadataRow(
-                                        icon: "humidity.fill",
-                                        label: "Humidity",
-                                        value: "\(weather.humidity)%"
-                                    )
+                                MetadataRow(
+                                    icon: "humidity.fill",
+                                    label: "Humidity",
+                                    value: log.weather.map { "\($0.humidity)%" } ?? "--"
+                                )
 
-                                    if let aqi = weather.aqi, let aqiDesc = weather.aqiDescription {
-                                        MetadataRow(
-                                            icon: "wind",
-                                            label: "Air Quality",
-                                            value: aqiDesc
-                                        )
-                                    }
-                                }
+                                MetadataRow(
+                                    icon: "wind",
+                                    label: "Air Quality",
+                                    value: log.weather?.aqiDescription ?? "--"
+                                )
 
-                                if let altitude = log.altitude {
-                                    MetadataRow(
-                                        icon: "mountain.2.fill",
-                                        label: "Altitude",
-                                        value: String(format: "%.0fm", altitude)
-                                    )
-                                }
+                                MetadataRow(
+                                    icon: "mountain.2.fill",
+                                    label: "Altitude",
+                                    value: log.altitude.map { String(format: "%.0fm", $0) } ?? "--"
+                                )
                             }
+                            .accessibilityIdentifier(LogsListAccessibilityIdentifiers.featuredCardWeatherData(index))
                         }
                     } else {
                         // Collapsed: Just show title and date
@@ -401,11 +409,18 @@ struct FeaturedLogCardView: View {
                 }
                 .padding(16)
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(Rectangle())
+                .accessibilityIdentifier(LogsListAccessibilityIdentifiers.featuredCardContent(index))
+                .onTapGesture {
+                    onTapCard()
+                }
             }
             .background(Color.white)
             .cornerRadius(12)
             .shadow(color: .black.opacity(0.08), radius: 8, x: 0, y: 2)
             .shadow(color: .black.opacity(0.04), radius: 2, x: 0, y: 1)
+            .accessibilityElement(children: .contain)
+            .accessibilityIdentifier(LogsListAccessibilityIdentifiers.featuredCard(index))
     }
 
     private var alternatingGradient: LinearGradient {

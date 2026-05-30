@@ -8,6 +8,7 @@
 import SwiftUI
 import SwiftData
 import CoreLocation
+import UIKit
 internal import Combine
 
 @MainActor
@@ -34,7 +35,7 @@ final class NewLogViewModel: ObservableObject {
     private let weatherService: WeatherService
     private let airQualityService: AirQualityService
     private let photoStorage: PhotoStorageService
-    private let modelContext: ModelContext
+    internal let modelContext: ModelContext  // internal for testing
 
     private var weatherTask: Task<Void, Never>?
 
@@ -232,6 +233,11 @@ final class NewLogViewModel: ObservableObject {
             // Update journal's lastModified
             journal.touch()
             try modelContext.save()
+
+            // Dismiss keyboard before showing alert (only in UI environment, not unit tests)
+            if UIApplication.shared.connectedScenes.first != nil {
+                UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+            }
 
             showingSaveConfirmation = true
         } catch {

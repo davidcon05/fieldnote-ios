@@ -47,4 +47,25 @@ struct LogsListScreen {
     func logCardByTitle(_ title: String) -> XCUIElement {
         app.staticTexts[title].firstMatch
     }
+
+    func featuredCard(index: Int) -> XCUIElement {
+        app.otherElements["logsList.featuredCard.\(index)"].firstMatch
+    }
+
+    // Featured Card Elements
+    func featuredCardChevron(index: Int) -> XCUIElement {
+        app.buttons["logsList.featuredCard.\(index).chevron"].firstMatch
+    }
+
+    func featuredCardContent(index: Int) -> XCUIElement {
+        app.otherElements["logsList.featuredCard.\(index).content"].firstMatch
+    }
+
+    func featuredCardExpandedNotes(index: Int) -> XCUIElement {
+        app.staticTexts["logsList.featuredCard.\(index).expandedNotes"].firstMatch
+    }
+
+    func featuredCardWeatherData(index: Int) -> XCUIElement {
+        app.otherElements["logsList.featuredCard.\(index).weatherData"].firstMatch
+    }
 }

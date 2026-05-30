@@ -12,27 +12,50 @@ import SwiftData
 
 struct NewLogView: View {
     @Environment(\.modelContext) private var modelContext
-    @StateObject private var viewModel: NewLogViewModel
     @StateObject private var locationManager = LocationManager()
 
+    let journal: Journal
+
+    // Create ViewModel lazily after we have access to environment's modelContext
+    @State private var viewModel: NewLogViewModel?
+
     init(journal: Journal) {
-        // Read API key from Info.plist (populated by Config.xcconfig locally or Xcode Cloud environment variable)
-        let apiKey = Bundle.main.infoDictionary?["WEATHER_API_KEY"] as? String ?? ""
-        let weatherService = WeatherService(apiKey: apiKey)
-        let airQualityService = AirQualityService(apiKey: apiKey)
+        self.journal = journal
         let locationMgr = LocationManager()
-
         _locationManager = StateObject(wrappedValue: locationMgr)
-
-        // Initialize ViewModel - modelContext will be injected in onAppear
-        _viewModel = StateObject(wrappedValue: NewLogViewModel(
-            journal: journal,
-            modelContext: try! ModelContext(ModelContainer(for: Journal.self, Log.self, AudioMemo.self)),
-            locationManager: locationMgr,
-            weatherService: weatherService,
-            airQualityService: airQualityService
-        ))
     }
+
+    var body: some View {
+        Group {
+            if let viewModel = viewModel {
+                NewLogContentView(viewModel: viewModel, locationManager: locationManager)
+            } else {
+                ProgressView("Loading...")
+            }
+        }
+        .onAppear {
+            if viewModel == nil {
+                // Initialize ViewModel with environment's modelContext
+                let apiKey = Bundle.main.infoDictionary?["WEATHER_API_KEY"] as? String ?? ""
+                let weatherService = WeatherService(apiKey: apiKey)
+                let airQualityService = AirQualityService(apiKey: apiKey)
+
+                viewModel = NewLogViewModel(
+                    journal: journal,
+                    modelContext: modelContext,  // Use environment's modelContext!
+                    locationManager: locationManager,
+                    weatherService: weatherService,
+                    airQualityService: airQualityService
+                )
+            }
+        }
+    }
+}
+
+// MARK: - Content View with ObservedObject
+private struct NewLogContentView: View {
+    @ObservedObject var viewModel: NewLogViewModel
+    @ObservedObject var locationManager: LocationManager
 
     var body: some View {
         ZStack(alignment: .bottom) {

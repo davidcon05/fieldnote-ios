@@ -89,11 +89,11 @@
 		01ACAB162FAA7C9D002C45CC = {
 			isa = PBXGroup;
 			children = (
+				019318F12FBF300000FF619B /* Config.xcconfig */,
 				01ACAB212FAA7C9D002C45CC /* EcoJournal */,
 				01ACAB312FAA7CA0002C45CC /* EcoJournalTests */,
 				01ACAB3B2FAA7CA0002C45CC /* EcoJournalUITests */,
 				01ACAB202FAA7C9D002C45CC /* Products */,
-				01F580F42FCA64AF00A77E6D /* Recovered References */,
 			);
 			sourceTree = "<group>";
 		};
@@ -105,14 +105,6 @@
 				01ACAB382FAA7CA0002C45CC /* EcoJournalUITests.xctest */,
 			);
 			name = Products;
-			sourceTree = "<group>";
-		};
-		01F580F42FCA64AF00A77E6D /* Recovered References */ = {
-			isa = PBXGroup;
-			children = (
-				019318F12FBF300000FF619B /* Config.xcconfig */,
-			);
-			name = "Recovered References";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */

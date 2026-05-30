@@ -19,9 +19,9 @@
     {
       "parallelizable" : false,
       "target" : {
-        "containerPath" : "container:fieldnote.xcodeproj",
-        "identifier" : "fieldnoteUITests",
-        "name" : "fieldnoteUITests"
+        "containerPath" : "container:EcoJournal.xcodeproj",
+        "identifier" : "EcoJournalUITests",
+        "name" : "EcoJournalUITests"
       }
     }
   ],

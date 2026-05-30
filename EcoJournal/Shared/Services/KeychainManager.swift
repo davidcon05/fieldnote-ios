@@ -134,7 +134,7 @@ final class KeychainManager: KeychainManaging {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrAccount as String: journalID,
-            kSecAttrService as String: "com.fieldnote.journal.password"
+            kSecAttrService as String: "com.ecojournal.journal.password"
         ]
 
         let status = SecItemDelete(query as CFDictionary)

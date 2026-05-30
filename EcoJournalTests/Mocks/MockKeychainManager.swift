@@ -6,12 +6,13 @@
 //
 
 import Foundation
+import CryptoKit
 @testable import EcoJournal
 
 final class MockKeychainManager: KeychainManaging {
     // MARK: - Mock State
 
-    var savedPasswords: [String: String] = [:]
+    var savedPasswords: [String: String] = [:] // Stores "hash|salt" format
     var shouldFailSave = false
     var shouldFailRetrieve = false
     var shouldFailDelete = false
@@ -32,7 +33,15 @@ final class MockKeychainManager: KeychainManaging {
             throw KeychainError.saveFailed(-1)
         }
 
-        savedPasswords[journalID] = password
+        // Mimic real KeychainManager behavior: hash password with salt
+        let salt = UUID().uuidString
+        let passwordWithSalt = password + salt
+        let passwordHash = SHA256.hash(data: Data(passwordWithSalt.utf8))
+        let hashString = passwordHash.compactMap { String(format: "%02x", $0) }.joined()
+
+        // Store in "hash|salt" format, just like real implementation
+        let storedValue = "\(hashString)|\(salt)"
+        savedPasswords[journalID] = storedValue
     }
 
     func getPassword(for journalID: String) throws -> String {
@@ -50,11 +59,39 @@ final class MockKeychainManager: KeychainManaging {
     func verifyPassword(_ enteredPassword: String, for journalID: String) -> Bool {
         verifyPasswordCallCount += 1
 
-        guard let storedPassword = savedPasswords[journalID] else {
+        guard let storedValue = try? getPassword(for: journalID) else {
             return false
         }
 
-        return enteredPassword == storedPassword
+        // Parse stored format: "hash|salt"
+        let components = storedValue.components(separatedBy: "|")
+        guard components.count == 2 else {
+            return false
+        }
+
+        let storedHash = components[0]
+        let salt = components[1]
+
+        // Hash entered password with same salt
+        let enteredPasswordWithSalt = enteredPassword + salt
+        let enteredHash = SHA256.hash(data: Data(enteredPasswordWithSalt.utf8))
+        let enteredHashString = enteredHash.compactMap { String(format: "%02x", $0) }.joined()
+
+        // Use constant-time comparison (mimic real implementation)
+        return constantTimeCompare(storedHash, enteredHashString)
+    }
+
+    // MARK: - Helper Methods
+
+    private func constantTimeCompare(_ a: String, _ b: String) -> Bool {
+        guard a.count == b.count else { return false }
+
+        var result = 0
+        for (char1, char2) in zip(a, b) {
+            result |= Int(char1.asciiValue ?? 0) ^ Int(char2.asciiValue ?? 0)
+        }
+
+        return result == 0
     }
 
     func deletePassword(for journalID: String) throws {

@@ -24,10 +24,10 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		019318F12FBF300000FF619B /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
 		01ACAB1F2FAA7C9D002C45CC /* EcoJournal.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = EcoJournal.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		01ACAB2E2FAA7CA0002C45CC /* EcoJournalTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = EcoJournalTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		01ACAB382FAA7CA0002C45CC /* EcoJournalUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = EcoJournalUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		019318F12FBF300000FF619B /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -93,6 +93,7 @@
 				01ACAB312FAA7CA0002C45CC /* EcoJournalTests */,
 				01ACAB3B2FAA7CA0002C45CC /* EcoJournalUITests */,
 				01ACAB202FAA7C9D002C45CC /* Products */,
+				01F580F42FCA64AF00A77E6D /* Recovered References */,
 			);
 			sourceTree = "<group>";
 		};
@@ -104,6 +105,14 @@
 				01ACAB382FAA7CA0002C45CC /* EcoJournalUITests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		01F580F42FCA64AF00A77E6D /* Recovered References */ = {
+			isa = PBXGroup;
+			children = (
+				019318F12FBF300000FF619B /* Config.xcconfig */,
+			);
+			name = "Recovered References";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */

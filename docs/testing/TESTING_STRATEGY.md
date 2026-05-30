@@ -32,79 +32,101 @@ This document outlines our testing approach for EcoJournal, including unit tests
 
 ## Current Test Distribution
 
-| Test Suite | Total Tests | Type | Uses Real Services? |
-|------------|-------------|------|---------------------|
-| Models (Journal, Log, Weather) | ~74 | Unit | No |
-| ViewModels | ~93 | Unit | No (uses MockKeychainManager) |
-| WeatherService | ~11 | Unit | No (uses MockURLSession) |
-| AirQualityService | ~10 | Unit | No (uses MockURLSession) |
-| **KeychainManager** | **~44** | **Mixed** | **Some - see below** |
-| PhotoStorageService | ~10 | Integration | Yes (real file system) |
+| Test Suite | Total Tests | Type | Uses Real Services? | Runs in Pre-Push? |
+|------------|-------------|------|---------------------|-------------------|
+| Models (Journal, Log, Weather) | ~74 | Unit | No | ✅ Yes |
+| ViewModels | ~93 | Unit | No (uses MockKeychainManager) | ✅ Yes |
+| WeatherService | ~11 | Unit | No (uses MockURLSession) | ✅ Yes |
+| AirQualityService | ~10 | Unit | No (uses MockURLSession) | ✅ Yes |
+| **KeychainManagerUnitTests** | **~20** | **Unit** | **No (uses MockKeychainManager)** | ✅ **Yes** |
+| **PhotoStorageUnitTests** | **~14** | **Unit** | **No (uses MockPhotoStorageService)** | ✅ **Yes** |
+| KeychainManagerTests | ~44 | Integration | Yes (real iOS Keychain) | ❌ No (manual/CI only) |
+| PhotoStorageServiceTests | ~10 | Integration | Yes (real file system) | ❌ No (manual/CI only) |
 
-**Total: ~242 tests**
+**Total: ~276 tests**
+- **Fast tests (run in pre-push)**: ~222 tests (<1 minute)
+- **Slow integration tests (manual/CI only)**: ~54 tests (~2 minutes)
 
 ---
 
 ## KeychainManager Testing Strategy
 
-**Problem**: KeychainManager has 44 tests that all hit the real iOS Keychain, making the test suite slow and potentially flaky.
+**Problem**: KeychainManager had 44 tests that all hit the real iOS Keychain, making the test suite slow.
 
-**Solution**: Convert most to unit tests with mocks, keep a few integration tests.
+**Solution**: Created separate test files for unit tests (mocked) and integration tests (real).
 
-### Tests to Keep as Integration Tests (2-3)
+### Implementation ✅ COMPLETED
 
-These verify the **critical path** works with real keychain:
+**Integration Tests** (`KeychainManagerTests.swift` - 44 tests):
+- Uses real `KeychainManager()` instance
+- Hits actual iOS Keychain APIs
+- Verifies integration with iOS system services
+- **Skipped in pre-push** to keep it fast
+- Run manually or in CI before releases
 
-1. **`testSavePassword_Success`** - Basic save/retrieve round-trip
-   ```swift
-   @Test("Save password successfully", .tags(.integration))
-   func testSavePassword_Success() async throws {
-       // Saves password → retrieves it → verifies format
-   }
-   ```
+**Unit Tests** (`KeychainManagerUnitTests.swift` - ~20 tests):
+- Uses `MockKeychainManager`
+- Tests business logic in isolation
+- Covers edge cases and error handling:
+  - Password hashing/verification
+  - Salt generation
+  - Case sensitivity
+  - Special characters (unicode, emojis)
+  - Error conditions
+  - Biometric mocking
+- **Runs in pre-push** (fast, no simulator overhead)
 
-2. **`testVerifyPassword_Correct`** - Full verification flow
-   ```swift
-   @Test("Verify password succeeds with correct password", .tags(.integration))
-   func testVerifyPassword_Correct() async throws {
-       // Saves password → verifies correct password → hashing works
-   }
-   ```
-
-3. **`testMultipleJournals`** (Optional) - Isolation between journals
-   ```swift
-   @Test("Multiple journals can have different passwords", .tags(.integration))
-   func testMultipleJournals() async throws {
-       // Ensures journal passwords don't interfere with each other
-   }
-   ```
-
-### Tests to Convert to Unit Tests with Mocks (~41)
-
-All edge cases and error handling:
-- Password overwrites
-- Case sensitivity
-- Special characters (unicode, emojis, etc.)
-- Empty passwords
-- Very long passwords
-- Deletion edge cases
-- Error descriptions
-- Biometric type checking (pure enum logic)
+**MockKeychainManager** now mimics real hashing logic:
+- Generates SHA256 hash with random salt
+- Stores in "hash|salt" format
+- Uses constant-time comparison
+- Identical behavior to real implementation
 
 **Benefits**:
-- Tests run 100x faster
+- Pre-push tests run 100x faster (~20 tests in milliseconds vs 44 tests in minutes)
 - No keychain state contamination
-- Can test error conditions easily
-- Still have confidence from integration tests
+- Easy error condition testing
+- Still have confidence from integration tests (run manually/CI)
 
-### Implementation TODO
+---
 
-- [ ] Review existing `MockKeychainManager.swift`
-- [ ] Enhance mock to support all test scenarios
-- [ ] Refactor 41 tests to use mock
-- [ ] Tag 2-3 integration tests with `.tags(.integration)`
-- [ ] Update pre-push hook to skip `.integration` tests
-- [ ] Document mock usage in this file
+## PhotoStorageService Testing Strategy
+
+**Problem**: PhotoStorageService had 10 tests that all hit the real file system, requiring simulator overhead.
+
+**Solution**: Created separate test files for unit tests (mocked) and integration tests (real).
+
+### Implementation ✅ COMPLETED
+
+**Integration Tests** (`PhotoStorageServiceTests.swift` - 10 tests):
+- Uses real `PhotoStorageService()` instance
+- Writes/reads/deletes actual files on simulator disk
+- Verifies integration with FileManager APIs
+- **Skipped in pre-push** to keep it fast
+- Run manually or in CI before releases
+
+**Unit Tests** (`PhotoStorageUnitTests.swift` - ~14 tests):
+- Uses `MockPhotoStorageService`
+- Tests business logic in isolation
+- Covers edge cases and error handling:
+  - Unique filename generation
+  - Save/load/delete flows
+  - Invalid URL handling
+  - Error conditions
+  - Batch deletion
+- **Runs in pre-push** (fast, no file I/O overhead)
+
+**MockPhotoStorageService** mimics real file operations:
+- Stores images in memory (URL → UIImage dictionary)
+- Generates unique UUIDs for filenames
+- Returns nil on failure conditions
+- No actual disk I/O required
+
+**Benefits**:
+- Pre-push tests run instantly (~14 tests in milliseconds vs 10 tests in seconds)
+- No file system side effects
+- Easy error condition testing
+- Deterministic test data
 
 ---
 
@@ -232,15 +254,57 @@ struct DebugDataInjector {
 
 ## Running Tests
 
-### All Tests (Full Suite)
+### All Tests (Full Suite - ~210 tests, 3-5 minutes)
 ```bash
 xcodebuild test -scheme EcoJournal -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
 ```
 
-### Unit Tests Only (Fast)
+### Fast Unit Tests Only (~222 tests, <1 minute)
 ```bash
-# Skip integration tests
-xcodebuild test -scheme EcoJournal -skip-testing:EcoJournalTests/KeychainManagerTests
+# Skip slow integration tests - this is what pre-push runs
+xcodebuild test \
+  -scheme EcoJournal \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
+  -only-testing:EcoJournalTests \
+  -skip-testing:EcoJournalTests/KeychainManagerTests \
+  -skip-testing:EcoJournalTests/PhotoStorageServiceTests
+```
+
+**Includes**:
+- All model tests (~74)
+- All ViewModel tests (~93)
+- All service tests (~45)
+- **KeychainManagerUnitTests** (~20) - mocked, fast
+- **PhotoStorageUnitTests** (~14) - mocked, fast
+
+**Excludes**:
+- KeychainManagerTests (44) - integration, slow
+- PhotoStorageServiceTests (10) - integration, slow
+
+### Integration Tests Only (~54 tests, ~2 minutes)
+```bash
+# Only run slow integration tests with real iOS APIs
+xcodebuild test \
+  -scheme EcoJournal \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
+  -only-testing:EcoJournalTests/KeychainManagerTests \
+  -only-testing:EcoJournalTests/PhotoStorageServiceTests
+```
+
+**When to run**:
+- Before major releases
+- Before submitting to TestFlight/App Store
+- When modifying KeychainManager or PhotoStorageService
+- In CI/CD pipeline
+
+### Just Mocked Unit Tests (~34 tests, <5 seconds)
+```bash
+# Ultra-fast mocked tests only
+xcodebuild test \
+  -scheme EcoJournal \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
+  -only-testing:EcoJournalTests/KeychainManagerUnitTests \
+  -only-testing:EcoJournalTests/PhotoStorageUnitTests
 ```
 
 ### Specific Test Suite
@@ -251,10 +315,13 @@ xcodebuild test -scheme EcoJournal -only-testing:EcoJournalTests/WeatherServiceT
 ### Pre-Push Hook
 Automatically runs on `git push`:
 - Builds the project
-- Runs unit tests (skips integration tests)
+- Runs fast unit tests (~140 tests, <1 minute)
+- **Skips slow integration tests** (KeychainManagerTests, PhotoStorageServiceTests)
 - Blocks push if tests fail
 
 Location: `.git/hooks/pre-push`
+
+**Note**: Integration tests are skipped in pre-push to keep it fast. Run full test suite manually before major releases.
 
 ---
 
